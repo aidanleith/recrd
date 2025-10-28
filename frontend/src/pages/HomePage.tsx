@@ -1,7 +1,7 @@
 import LoggedInName from '../components/LoggedInName';
 import CardUI from '../components/CardUI';
 
-const CardPage = () =>
+const HomePage = () =>
 {
     return(
         <div>
@@ -11,4 +11,4 @@ const CardPage = () =>
     );
 }
 
-export default CardPage;
+export default HomePage;
