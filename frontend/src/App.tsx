@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Navigate, Routes } from 'react-router-d
 import { useState } from 'react';
 import './App.css';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import CardPage from './pages/CardPage';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage'
@@ -15,12 +16,16 @@ function App() {
     setIsAuthenticated(true);
   };
 
+  const handleRegisterSuccess = () => {
+    setIsAuthenticated(true);
+  }
+
   return (
     <Router>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
-
+        <Route path='/register' element={<RegisterPage onRegisterSuccess={handleRegisterSuccess} />} />
         {/* Protected routes */}
         <Route element={<ProtectedLayout isAuthenticated={isAuthenticated} />}>
           <Route path="/" element={<Navigate to="/home" replace />} />

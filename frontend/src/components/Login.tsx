@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button"
+import { Link, useLocation } from 'react-router-dom';
 
 interface LoginProps {
     onLoginSuccess: () => void;
@@ -79,7 +80,11 @@ function Login({ onLoginSuccess }: LoginProps)
             </div>
             <div className="flex w-full justify-between">
                 <h2 className="text-(--darktext) font-bold">don't have an account?</h2>
-                <h2 className="text-(--primary) font-bold">sign up</h2>
+                <Link
+                to="/register"
+              >
+                <h2 className="text-(--primary) font-bold hover:underline">sign up</h2>
+              </Link>
             </div>
 
             <span id="loginResult">{message}</span>
