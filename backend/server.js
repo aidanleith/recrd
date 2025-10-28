@@ -41,7 +41,7 @@ app.post('/api/addcard', async (req, res, next) =>
     
     try
     {
-        const db = client.db('COP4331Cards');
+        const db = client.db('recrd');
 
         await db.collection('Cards').insertOne(newCard);
     }
@@ -61,8 +61,8 @@ app.post('/api/login', async (req, res, next) =>
 
     var error = '';
     const { login, password } = req.body;
-    const db = client.db('COP4331Cards');
-    const results = await db.collection('Users').find({Login:login,Password:password}).toArray();
+    const db = client.db('recrd');
+    const results = await db.collection('Users').find({username:login, password:password}).toArray();
     var id = -1;
     var fn = '';
     var ln = '';
@@ -78,6 +78,55 @@ app.post('/api/login', async (req, res, next) =>
     res.status(200).json(ret);
 });
 
+// Registration endpoint
+app.post('/api/register', async (req, res, next) => {
+    // incoming: username, email, password
+    // outgoing: error
+
+    const { username, email, password } = req.body || {};
+    console.log('Register endpoint called with:', { username, email });
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'username and password are required' });
+    }
+
+    try {
+        const db = client.db('recrd');
+
+        // Check for existing username or email
+        const existingUser = await db.collection('Users').findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ error: 'username or email already exists' });
+        }
+
+        // Build a user document that mirrors the fields used elsewhere in the codebase
+        const newUser = {
+            UserID: Date.now(), // numeric id
+            username: String(username),
+            email: email ? String(email) : '',
+            password: String(password), // NOTE: store hashed password in production
+            following: [],
+            followers: [],
+            createdAt: new Date()
+        };
+
+        // Optional fields: accept firstName/lastName if client sent them
+        if (req.body.firstName) newUser.FirstName = String(req.body.firstName);
+        if (req.body.lastName) newUser.LastName = String(req.body.lastName);
+
+        console.log('Inserting user document:', newUser);
+
+        const insertResult = await db.collection('Users').insertOne(newUser);
+        console.log('Insert result:', insertResult.insertedId);
+
+        return res.status(200).json({ error: '' });
+    } catch (e) {
+        console.error('Register error:', e);
+        // If this is a MongoServerError about validation, return the message so you can inspect it
+        return res.status(500).json({ error: e && e.message ? e.message : String(e) });
+    }
+});
+
 app.post('/api/searchcards', async (req, res, next) =>
 {
     // incoming: userId, search
@@ -89,7 +138,7 @@ app.post('/api/searchcards', async (req, res, next) =>
     
     var _search = search.trim();
 
-    const db = client.db('COP4331Cards');
+    const db = client.db('recrd');
     const results = await db.collection('Cards').find({"Card":{$regex:_search+'.*', $options:'i'}}).toArray();
 
     var _ret = [];

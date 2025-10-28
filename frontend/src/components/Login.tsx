@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/Button"
+import { Link, useLocation } from 'react-router-dom';
 
-function Login()
+interface LoginProps {
+    onLoginSuccess: () => void;
+}
+
+function Login({ onLoginSuccess }: LoginProps)
 {
     const navigate = useNavigate();
     const [message,setMessage] = useState('');
@@ -29,7 +35,8 @@ function Login()
                 var user = {firstName:res.firstName,lastName:res.lastName,id:res.id, userLogin:loginName}
                 localStorage.setItem('user_data', JSON.stringify(user));
                 setMessage('');
-                window.location.href = '/cards';
+                onLoginSuccess();
+                navigate('/home');
             }
         }
         catch(error:any)
@@ -50,14 +57,36 @@ function Login()
     }
 
     return(
-        <div id="loginDiv">
-            <span id="inner-title">PLEASE LOG IN</span><br />
-            <input type="text" id="loginName" placeholder="Username"
-                onChange={handleSetLoginName} />
-            <input type="password" id="loginPassword" placeholder="Password"
-                onChange={handleSetPassword} />
-            <input type="submit" id="loginButton" className="buttons" value = "Do It"
-                onClick={doLogin} />
+        <div className="flex flex-col gap-8 w-lg">
+            <h1 className="text-5xl font-bold text-(--primary)">
+                recrd
+            </h1>
+            <div className="flex flex-col gap-3 w-full">
+                <input type="text" id="loginName" placeholder="Username" className="w-full text-center h-12 font-semibold bg-[#1e1e1e] border border-(--primary) rounded-lg"
+                    onChange={handleSetLoginName} />
+                <input type="password" id="loginPassword" placeholder="Password" className="w-full text-center h-12 font-semibold bg-[#1e1e1e] border border-(--primary) rounded-lg"
+                    onChange={handleSetPassword} />
+                <Button 
+                    variant="tertiary"
+                    size="lg"
+                    onClick={doLogin}
+                    type="submit"
+                    id="loginButton"
+                >
+                    Login
+                </Button>
+                <h2>forgot your password?</h2>
+                {/* make it a link not an h2 */}
+            </div>
+            <div className="flex w-full justify-between">
+                <h2 className="text-(--darktext) font-bold">don't have an account?</h2>
+                <Link
+                to="/register"
+              >
+                <h2 className="text-(--primary) font-bold hover:underline">sign up</h2>
+              </Link>
+            </div>
+
             <span id="loginResult">{message}</span>
         </div>
     );
