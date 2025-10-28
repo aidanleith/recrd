@@ -14,7 +14,7 @@ export const ProtectedLayout = ({ isAuthenticated }: ProtectedLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col justify-center">
       <Navbar />
-      <main className="flex-1 mx-auto max-w-6xl mt-12">
+      <main className="flex-1 mx-auto w-5xl my-6">
         <Outlet />
       </main>
     </div>

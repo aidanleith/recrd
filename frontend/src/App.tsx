@@ -4,6 +4,7 @@ import './App.css';
 import LoginPage from './pages/LoginPage';
 import CardPage from './pages/CardPage';
 import HomePage from './pages/HomePage';
+import ProfilePage from './pages/ProfilePage'
 import { ProtectedLayout } from './layouts/ProtectedLayout';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/cards" element={<CardPage />} />
           <Route path='/home' element={<HomePage />} />
+          <Route path='/profile' element={<ProfilePage />} />
         </Route>
 
         {/* Fallback route */}

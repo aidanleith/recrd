@@ -20,7 +20,7 @@ export const Navbar = () => {
   return (
     // 3. Fixed border-b-1 to border-b
     <nav className="shadow-sm bg-background border-b border-[var(--border)]/10">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
         <div className="flex h-16 justify-between w-full">
           <div className="flex justify-between w-full">
             <div className="flex">
