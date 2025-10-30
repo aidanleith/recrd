@@ -49,11 +49,11 @@ exports.setApp = function (app, client) {
         // incoming: username, password
         // outgoing: JWT, error
         var error = '';
+        console.log('LOGIN ATTEMPT BODY:', req.body);
         const { username, password } = req.body;
-        const db = client.db('recrd');
-        const results = await
-            db.collection('Users').find({ username: username }).toArray
-                ();
+        const db = client.db('recrd'); // Use the actual DB name
+        const results = await db.collection('Users').find({ username: username }).toArray();
+        console.log('DB QUERY RESULTS:', results);
         var id = -1;
         var email = '';
         var ret;

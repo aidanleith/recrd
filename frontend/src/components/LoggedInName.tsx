@@ -1,16 +1,21 @@
 function LoggedInName()
 {
     function getCurrentUserName() {
-        var data;
-        data = JSON.parse(localStorage.getItem('user_data') || '');
-        return data.firstName + ' ' + data.lastName;
+        var data = null;
+        try {
+            data = JSON.parse(localStorage.getItem('user_data') || 'null');
+        } catch (e) {
+            data = null;
+        }
+        return data && data.email ? data.email : '';
     }
 
     function doLogout(event:any) : void
     {
         event.preventDefault();
         localStorage.removeItem('user_data');
-        window.location.href = '/';
+        localStorage.removeItem('token_data');
+        window.location.href = '/login';
     };
         
     return(

@@ -1,13 +1,9 @@
 import Register from '../components/Register';
 
-interface RegisterPageProps {
-    onRegisterSuccess: () => void;
-}
-
-const RegisterPage = ({ onRegisterSuccess }: RegisterPageProps) => {
+const RegisterPage = () => {
     return (
         <div className='h-screen flex items-center justify-center'>
-            <Register onRegisterSuccess={onRegisterSuccess} />
+            <Register />
         </div>
     );
 };

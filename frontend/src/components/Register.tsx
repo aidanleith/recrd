@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button"
+import { buildPath } from './Path';
 
-interface RegisterProps {
-    onRegisterSuccess: () => void;
-}
-
-function Register({ onRegisterSuccess }: RegisterProps) {
+function Register() {
     const navigate = useNavigate();
     const [message, setMessage] = useState('');
     const [formData, setFormData] = useState({
@@ -33,20 +30,15 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             return;
         }
 
-        // Create user object matching database structure
+        // Create payload expected by backend
         const newUser = {
             username: formData.username,
             email: formData.email,
-            password: formData.password,
-            following: [],
-            followers: [],
-            createdAt: new Date().toISOString()
+            password: formData.password
         };
 
-        console.log('Register: sending', newUser);
-
         try {
-            const response = await fetch('http://localhost:5000/api/register', {
+            const response = await fetch(buildPath('api/register'), {
                 method: 'POST',
                 body: JSON.stringify(newUser),
                 headers: {
@@ -58,29 +50,27 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             let res: any = {};
             try { res = JSON.parse(text); } catch { res = { error: text }; }
 
-            console.log('Register response', response.status, res);
-
             if (!response.ok) {
                 setMessage(res.error || `Server error: ${response.status}`);
                 return;
             }
 
-            if (res.error) {
+            // Backend returns "" on success, or an error string
+            if (typeof res === 'string' && res.length === 0) {
+                setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+                setMessage('Registration successful! Check your email for verification code.');
+                navigate('/verify');
+                return;
+            }
+
+            if (res && res.error) {
                 setMessage(res.error);
             } else {
-                // Clear form and show success message
-                setFormData({
-                    username: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: ''
-                });
-                setMessage('Registration successful!');
-                onRegisterSuccess();
-                navigate('/login');
+                setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+                setMessage('Registration successful! Check your email for verification code.');
+                navigate('/verify');
             }
         } catch (error: any) {
-            console.error('Register fetch error', error);
             setMessage(error.toString());
         }
     }
