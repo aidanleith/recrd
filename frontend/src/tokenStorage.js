@@ -1,4 +1,4 @@
-export function storeToken(tok: any): any {
+export function storeToken(tok) {
     try {
         localStorage.setItem('token_data', tok.accessToken);
     }
@@ -6,7 +6,7 @@ export function storeToken(tok: any): any {
         console.log(e);
     }
 }
-export function retrieveToken(): any {
+export function retrieveToken() {
     var ud;
     try {
         ud = localStorage.getItem('token_data');
