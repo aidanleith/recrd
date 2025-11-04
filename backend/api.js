@@ -210,6 +210,48 @@ exports.setApp = function (app, client) {
         var ret = { results: _ret, error: error, jwtToken: refreshedToken };
         res.status(200).json(ret);
     });
+
+    //search for albums
+    app.post('/api/searchAlbums', async (req, res, next) => {
+        console.log("Request body:", req.body);
+        const db = client.db('recrd'); // Use the actual DB name
+        const songName = req.body.title;
+        console.log("Searching for:", songName);
+        //retrieve all matching song names
+        const results = await db.collection('Albums').find({ title: songName}).toArray();
+        console.log("Results returned: ", results);
+        var ret;
+        if (results.length > 0) {
+            //return list of albums
+            return res.status(200).json(results);
+        }
+        else {
+            //No matching albums found
+            ret = { error: "No matching albums found." };
+            //status code 404 = client error
+            return res.status(404).json(ret);
+        }
+
+    });
+
+    //searching for users seperate from searching for albums, searched by username
+    app.post('/api/searchUsers', async (req, res, next) => {
+        const user = req.body.search;
+        const db = client.db('recrd');
+        const results = await db.collection('Users').find({username:user}).toArray();
+
+        var ret;
+        if (results.length > 0){
+            //return list of users
+            return res.status(200).json(results);
+        }
+        else{
+            ret = {error: "No matching users found."}
+            return res.status(400).json(ret);
+        }
+
+
+    });
 }
 
 const sendVerificationEmail = async (email, otp) => {
