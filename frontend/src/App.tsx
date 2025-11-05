@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage'
 import { ProtectedLayout } from './layouts/ProtectedLayout';
 import VerifyPage from './pages/VerifyPage';
+import SearchPage from './pages/SearchPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/cards" element={<CardPage />} />
           <Route path='/home' element={<HomePage />} />
           <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/search' element={<SearchPage />} />
         </Route>
 
         {/* Fallback route */}

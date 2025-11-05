@@ -6,7 +6,7 @@ import { IconUser } from "../../../public/icons/IconUser";
 import { IconHome } from "../../../public/icons/IconHome";
 import { IconAddCircle } from "../../../public/icons/IconAddCircle";
 import { IconList } from "../../../public/icons/IconList";
-import { IconTrendingUp } from "../../../public/icons/IconTrendingUp";
+import { IconSearch } from "../../../public/icons/IconSearch";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -64,14 +64,14 @@ export const Navbar = () => {
                 <IconList className="w-7 h-7" />
               </Link>
               <Link
-                to="/trending" // 4. Changed href -> to
+                to="/search" // 4. Changed href -> to
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                  isActive('/trending')
+                  isActive('/search')
                     ? 'border-primary text-(--primary)' // 5. Fixed
                     : 'border-transparent text-gray-500 hover:border-primary hover:text-(--primary)' // 5. Fixed
                 }`}
               >
-                <IconTrendingUp className="w-7 h-7" />
+                <IconSearch className="w-7 h-7" />
               </Link>
               <Link
                 to="/profile" // 4. Changed href -> to

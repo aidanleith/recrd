@@ -213,44 +213,60 @@ exports.setApp = function (app, client) {
 
     //search for albums
     app.post('/api/searchAlbums', async (req, res, next) => {
-        console.log("Request body:", req.body);
-        const db = client.db('recrd'); // Use the actual DB name
-        const songName = req.body.title;
-        console.log("Searching for:", songName);
-        //retrieve all matching song names
-        const results = await db.collection('Albums').find({ title: songName}).toArray();
-        console.log("Results returned: ", results);
-        var ret;
-        if (results.length > 0) {
-            //return list of albums
-            return res.status(200).json(results);
+        try {
+            
+            console.log("Request body:", req.body);
+            const db = client.db('recrd'); // Use the actual DB name
+            const searchTerm = req.body.title;
+            console.log("Searching for:", searchTerm);
+            //retrieve all matching song names
+            // const results = await db.collection('Albums').find({ title: songName}).toArray();
+            const results = await db.collection('Albums').find({
+                $or: [
+                    { "title": { $regex: searchTerm, $options: 'i' } },
+                    { "artist": { $regex: searchTerm, $options: 'i' } }
+                ]
+            }).toArray();
+            console.log("Results returned: ", results);
+            var ret;
+            if (results.length > 0) {
+                //return list of albums
+                return res.status(200).json(results);
+            }
+            else {
+                //No matching albums found
+                ret = { error: "No matching albums found." };
+                //status code 404 = client error
+                return res.status(404).json(ret);
+            }
+        } catch (err) {
+            console.error("API Error in /searchAlbums:", err);
+            return res.status(500).json({ error: "An internal database error occurred." });
         }
-        else {
-            //No matching albums found
-            ret = { error: "No matching albums found." };
-            //status code 404 = client error
-            return res.status(404).json(ret);
-        }
-
     });
 
     //searching for users seperate from searching for albums, searched by username
     app.post('/api/searchUsers', async (req, res, next) => {
-        const user = req.body.search;
-        const db = client.db('recrd');
-        const results = await db.collection('Users').find({username:user}).toArray();
-
-        var ret;
-        if (results.length > 0){
-            //return list of users
-            return res.status(200).json(results);
+        try {
+            const user = req.body.search;
+            const db = client.db('recrd');
+            // const results = await db.collection('Users').find({username:user}).toArray();
+            const results = await db.collection('Users').find({
+                "username": { $regex: user, $options: 'i' }
+            }).toArray();
+            var ret;
+            if (results.length > 0){
+                //return list of users
+                return res.status(200).json(results);
+            }
+            else{
+                ret = {error: "No matching users found."}
+                return res.status(400).json(ret);
+            }
+        } catch (err) {
+            console.error("API Error in /searchUsers:", err);
+            return res.status(500).json({ error: "An internal database error occurred." });
         }
-        else{
-            ret = {error: "No matching users found."}
-            return res.status(400).json(ret);
-        }
-
-
     });
 }
 
