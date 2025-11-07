@@ -65,7 +65,9 @@ exports.setApp = function (app, client) {
                 email = results[0].email;
                 try {
                     const token = require("./createJWT.js");
+                    
                     ret = token.createToken(email, id);
+
                 }
                 catch (e) {
                     ret = { error: e.message };
@@ -106,7 +108,9 @@ exports.setApp = function (app, client) {
             isVerified: false,
             otp: String(hashedOtp),
             otpCreatedAt: Date.now(),
-            otpExpiresAt: Date.now() + otpExpirationTime
+            otpExpiresAt: Date.now() + otpExpirationTime,
+            toListen: [],
+            top3: []
         };
         var error = '';
 
