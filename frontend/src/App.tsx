@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage'
 import { ProtectedLayout } from './layouts/ProtectedLayout';
 import VerifyPage from './pages/VerifyPage';
 import SearchPage from './pages/SearchPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/verify' element={<VerifyPage />} />
+        <Route path='/reset-password/:token' element={<ResetPasswordPage />} />
         {/* Protected routes */}
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />

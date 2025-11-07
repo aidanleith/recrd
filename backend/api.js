@@ -13,7 +13,7 @@ const otpExpirationTime = 30 * 60000;
 const passwordExpirationTime = 10 * 60000;
 
 //Used for password link in email, change to domain name / ip when on server
-const app_name = 'localhost'
+const app_name = 'localhost:5173'
 //const app_name = '45.55.136.167'
 
 exports.setApp = function (app, client) {
@@ -255,7 +255,7 @@ exports.setApp = function (app, client) {
             from: 'recrd@hamsterrunner.com',
             to: email,
             subject: "Reset Your RECRD Password",
-            text: `Your password reset link is: http://${req.get('host')}/api/resetPassword/${resetToken}`
+            text: `Your password reset link is: http://${app_name}/reset-password/${resetToken}`
                 + "\nYour link will expire in " + passwordExpirationTime / 60000 + " minutes.", // plain‑text body
         });
 
@@ -263,7 +263,7 @@ exports.setApp = function (app, client) {
 
     app.patch('/api/resetPassword/:token', async (req, res, next) => {
         // incoming: password
-        // outgoing: error
+        // outgoing: JWT, error
 
         const { password } = req.body;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -275,9 +275,13 @@ exports.setApp = function (app, client) {
         const results = await db.collection('Users').find({ passwordResetToken: hashedToken }).toArray();
         console.log('DB QUERY RESULTS:', results);
         var error = '';
+        var id = -1;
+        var email = '';
         var ret;
         if (results.length > 0) {
             const expirationTime = results[0].passwordResetTokenExpires;
+            id = results[0]._id;
+            email = results[0].email;
             if (expirationTime > Date.now()) {
                 try {
                     db.collection('Users').findOneAndUpdate({ passwordResetToken: hashedToken },
@@ -286,8 +290,16 @@ exports.setApp = function (app, client) {
                 catch (e) {
                     ret = e;
                 }
-                ret = { error: "Password Changed" };
-
+                //Create the JWT
+                id = results[0]._id;
+                email = results[0].email;
+                try {
+                    const token = require("./createJWT.js");
+                    ret = token.createToken(email, id);
+                }
+                catch (e) {
+                    ret = { error: e.message };
+                }
             } else {
                 ret = { error: "Token has expired" };
             }
