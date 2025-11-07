@@ -1,5 +1,6 @@
 require('express');
 require('mongodb');
+const crypto = require('crypto');
 
 //Install these in the backend folder if you dont have them
 const nodemailer = require('nodemailer');
@@ -9,6 +10,11 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 //30 Minutes to milliseconds
 const otpExpirationTime = 30 * 60000;
+const passwordExpirationTime = 10 * 60000;
+
+//Used for password link in email, change to domain name / ip when on server
+const app_name = 'localhost'
+//const app_name = '45.55.136.167'
 
 exports.setApp = function (app, client) {
     app.post('/api/addcard', async (req, res, next) => {
@@ -65,9 +71,7 @@ exports.setApp = function (app, client) {
                 email = results[0].email;
                 try {
                     const token = require("./createJWT.js");
-                    
                     ret = token.createToken(email, id);
-
                 }
                 catch (e) {
                     ret = { error: e.message };
@@ -106,11 +110,11 @@ exports.setApp = function (app, client) {
             followers: [],
             createdAt: new Date(),
             isVerified: false,
+            toListen: [],
+            top3: [],
             otp: String(hashedOtp),
             otpCreatedAt: Date.now(),
-            otpExpiresAt: Date.now() + otpExpirationTime,
-            toListen: [],
-            top3: []
+            otpExpiresAt: Date.now() + otpExpirationTime
         };
         var error = '';
 
@@ -125,6 +129,27 @@ exports.setApp = function (app, client) {
         }
         res.status(200).json(error);
     });
+
+    const sendVerificationEmail = async (email, otp) => {
+        const transporter = nodemailer.createTransport({
+            host: "smtp.sendgrid.net",
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: "apikey",
+                pass: process.env.SENDGRID_SMTP_RELAY,
+            },
+        });
+
+        const info = await transporter.sendMail({
+            from: 'recrd@hamsterrunner.com',
+            to: email,
+            subject: "Verifiy Your RECRD Account",
+            text: "Your verification code is: " + otp + "."
+                + "\nYour code will expire in " + otpExpirationTime / 60000 + " minutes.", // plain‑text body
+        });
+
+    };
 
     app.post('/api/verifyOTP', async (req, res, next) => {
         // incoming: username, otp
@@ -146,7 +171,7 @@ exports.setApp = function (app, client) {
                 if (await bcrypt.compare(String(otp), hashedOtp)) {
                     //Set account to verified and removed OTP fields from database
                     try {
-                        db.collection('Users').findOneAndUpdate({ username: username }, {$set: { isVerified: true }, $unset: { otp: "", otpCreatedAt: "", otpExpiresAt: "" }});
+                        db.collection('Users').findOneAndUpdate({ username: username }, { $set: { isVerified: true }, $unset: { otp: "", otpCreatedAt: "", otpExpiresAt: "" } });
                     }
                     catch (e) {
                         ret = { error: e.message };
@@ -174,6 +199,102 @@ exports.setApp = function (app, client) {
         else {
             ret = { error: "User already verified or does not exist" };
         }
+        res.status(200).json(ret);
+    });
+
+    app.post('/api/forgotPassword', async (req, res, next) => {
+        // incoming: email
+        // outgoing: error
+
+        const { email } = req.body;
+
+        var error = '';
+        console.log('LOGIN ATTEMPT BODY:', req.body);
+        const db = client.db('recrd'); // Use the actual DB name
+        const results = await db.collection('Users').find({ email: email }).toArray();
+        console.log('DB QUERY RESULTS:', results);
+        var id = -1;
+        var ret;
+        if (results.length > 0) {
+            id = results[0]._id;
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+            const resetTokenExpiration = Date.now() + passwordExpirationTime;
+
+            try {
+                db.collection('Users').findOneAndUpdate({ email: email }, { $set: { passwordResetToken: hashedResetToken, passwordResetTokenExpires: resetTokenExpiration } });
+            }
+            catch (e) {
+                ret = e;
+            }
+            console.log(resetToken, hashedResetToken);
+
+            sendPasswordResetEmail(email, resetToken, req);
+
+        }
+        else {
+            ret = { error: "User does not exist with that email" };
+        }
+
+        res.status(200).json(ret);
+    });
+
+    const sendPasswordResetEmail = async (email, resetToken, req) => {
+        const transporter = nodemailer.createTransport({
+            host: "smtp.sendgrid.net",
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: "apikey",
+                pass: process.env.SENDGRID_SMTP_RELAY,
+            },
+        });
+
+        const info = await transporter.sendMail({
+            from: 'recrd@hamsterrunner.com',
+            to: email,
+            subject: "Reset Your RECRD Password",
+            text: `Your password reset link is: http://${req.get('host')}/api/resetPassword/${resetToken}`
+                + "\nYour link will expire in " + passwordExpirationTime / 60000 + " minutes.", // plain‑text body
+        });
+
+    };
+
+    app.patch('/api/resetPassword/:token', async (req, res, next) => {
+        // incoming: password
+        // outgoing: error
+
+        const { password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+        
+        console.log('LOGIN ATTEMPT BODY:', req.body);
+        const db = client.db('recrd'); // Use the actual DB name
+        const results = await db.collection('Users').find({ passwordResetToken: hashedToken }).toArray();
+        console.log('DB QUERY RESULTS:', results);
+        var error = '';
+        var ret;
+        if (results.length > 0) {
+            const expirationTime = results[0].passwordResetTokenExpires;
+            if (expirationTime > Date.now()) {
+                try {
+                    db.collection('Users').findOneAndUpdate({ passwordResetToken: hashedToken },
+                         { $set: { password: hashedPassword}, $unset: { passwordResetToken: "", passwordResetTokenExpires: ""} });
+                }
+                catch (e) {
+                    ret = e;
+                }
+                ret = { error: "Password Changed" };
+
+            } else {
+                ret = { error: "Token has expired" };
+            }
+        } else {
+            ret = { error: "Invalid Reset Token" };
+        }
+
         res.status(200).json(ret);
     });
 
@@ -218,7 +339,7 @@ exports.setApp = function (app, client) {
     //search for albums
     app.post('/api/searchAlbums', async (req, res, next) => {
         try {
-            
+
             console.log("Request body:", req.body);
             const db = client.db('recrd'); // Use the actual DB name
             const searchTerm = req.body.title;
@@ -259,12 +380,12 @@ exports.setApp = function (app, client) {
                 "username": { $regex: user, $options: 'i' }
             }).toArray();
             var ret;
-            if (results.length > 0){
+            if (results.length > 0) {
                 //return list of users
                 return res.status(200).json(results);
             }
-            else{
-                ret = {error: "No matching users found."}
+            else {
+                ret = { error: "No matching users found." }
                 return res.status(400).json(ret);
             }
         } catch (err) {
@@ -274,23 +395,3 @@ exports.setApp = function (app, client) {
     });
 }
 
-const sendVerificationEmail = async (email, otp) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.sendgrid.net",
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: "apikey",
-            pass: process.env.SENDGRID_SMTP_RELAY,
-        },
-    });
-
-    const info = await transporter.sendMail({
-        from: 'recrd@hamsterrunner.com',
-        to: email,
-        subject: "Verifiy Your RECRD Account",
-        text: "Your verification code is: " + otp + "."
-            + "\nYour code will expire in " + otpExpirationTime / 60000 + " minutes.", // plain‑text body
-    });
-
-};
