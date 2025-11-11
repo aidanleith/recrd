@@ -269,7 +269,7 @@ exports.setApp = function (app, client) {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-        
+
         console.log('LOGIN ATTEMPT BODY:', req.body);
         const db = client.db('recrd'); // Use the actual DB name
         const results = await db.collection('Users').find({ passwordResetToken: hashedToken }).toArray();
@@ -285,7 +285,7 @@ exports.setApp = function (app, client) {
             if (expirationTime > Date.now()) {
                 try {
                     db.collection('Users').findOneAndUpdate({ passwordResetToken: hashedToken },
-                         { $set: { password: hashedPassword}, $unset: { passwordResetToken: "", passwordResetTokenExpires: ""} });
+                        { $set: { password: hashedPassword }, $unset: { passwordResetToken: "", passwordResetTokenExpires: "" } });
                 }
                 catch (e) {
                     ret = e;
@@ -305,6 +305,140 @@ exports.setApp = function (app, client) {
             }
         } else {
             ret = { error: "Invalid Reset Token" };
+        }
+
+        res.status(200).json(ret);
+    });
+
+    app.get('/api/users/:username', async (req, res, next) => {
+        // incoming: 
+        // outgoing: id, toListen, topThree, followerCount, followingCount, albums
+        // album = {title, artist, coverArtUrl, rankValue, notes}
+
+        const username = req.params.username;
+
+        console.log('LOGIN ATTEMPT BODY:', req.body);
+        const db = client.db('recrd'); // Use the actual DB name
+        const userResults = await db.collection('Users').find({ username: username }).toArray();
+        console.log('DB QUERY RESULTS:', userResults);
+        var error = '';
+        var ret;
+        var id = -1;
+        var toListen = [];
+        var topThree = [];
+        var followerCount, followingCount;
+        if (userResults.length > 0) {
+            id = userResults[0]._id;
+            toListen = userResults[0].toListen;
+            topThree = userResults[0].top3;
+            followerCount = userResults[0].followers.length;
+            followingCount = userResults[0].following.length;
+
+            //Might want to make this only display 5 most recent and then allow a view all option
+            const rankingResults = await db.collection('Rankings').find({ user: id }).toArray();
+
+            //Gets album info for each album and compiles it to be returned
+            const albums = await Promise.all(rankingResults.map(async ranking => {
+                var album = new Object();
+                try {
+                    const albumResults = await db.collection('Albums').find({ _id: ranking.album }).toArray();
+                    if (albumResults.length > 0) {
+                        album.title = albumResults[0].title;
+                        album.artist = albumResults[0].artist;
+                        album.coverArtUrl = albumResults[0].coverArtUrl;
+                        album.rankValue = ranking.rankValue;
+                        album.notes = ranking.notes;
+                        console.log('ALBUM RESULTS:', album);
+                        return album;
+                    } else {
+                        ret = { error: "No Album exists for id: " + ranking.album };
+                        return error;
+                    }
+                }
+                catch (error) {
+                    console.error("Error finding album: ", error);
+                    return error;
+                }
+            }));
+
+            ret = { id: id, toListen: toListen, topThree: topThree, followerCount: followerCount, followingCount: followingCount, albums: albums }
+
+        } else {
+            ret = { error: "User Not Found" };
+        }
+
+        res.status(200).json(ret);
+    });
+
+    app.get('/api/albums/:title', async (req, res, next) => {
+        // incoming: 
+        // outgoing: id, artist, releaseDate, genre, coverArtUrl, averageRanking, rankings
+        // rankings = { username, rankvalue, notes, createdAt }
+
+        // Might want to use ID instead of name because of special characters
+        // Would have to change search albums api as well
+        const title = req.params.title.replace(/-/g, ' ');
+
+        console.log('LOGIN ATTEMPT BODY:', req.body);
+        const db = client.db('recrd'); // Use the actual DB name
+        const albumResults = await db.collection('Albums').find({ title: title }).toArray();
+        console.log('DB QUERY RESULTS:', albumResults);
+        var error = '';
+        var ret;
+        var id = -1;
+        var artist, genre, coverArtUrl;
+        var releaseDate;
+        var averageRanking;
+        if (albumResults.length > 0) {
+            id = albumResults[0]._id;
+            artist = albumResults[0].artist;
+            genre = albumResults[0].genre;
+            coverArtUrl = albumResults[0].coverArtUrl;
+            releaseDate = albumResults[0].releaseDate;
+
+            //Might want to make this only display 5 most recent and then allow a view all option
+            const rankingResults = await db.collection('Rankings').find({ album: id }).toArray();
+            var rankings;
+
+            var totalRankingAmount = 0;
+            rankingResults.forEach(ranking => {
+                totalRankingAmount += ranking.rankValue;
+            });
+            averageRanking = totalRankingAmount / rankingResults.length;
+
+            if (rankingResults.length > 0) {
+                //Gets album info for each album and compiles it to be returned
+                rankings = await Promise.all(rankingResults.map(async ranking => {
+                    var rankingObject = new Object();
+                    try {
+                        const userResults = await db.collection('Users').find({ _id: ranking.user }).toArray();
+                        if (albumResults.length > 0) {
+                            rankingObject.username = userResults[0].username;
+                            rankingObject.rankValue = ranking.rankValue;
+                            rankingObject.notes = ranking.notes;
+                            rankingObject.createdAt = ranking.createdAt;
+                            console.log('ALBUM RESULTS:', rankingObject);
+                            return rankingObject;
+                        } else {
+                            ret = { error: "No users found to reviewed this album" + ranking.album };
+                            return error;
+                        }
+                    }
+                    catch (error) {
+                        console.error("Error finding users: ", error);
+                        return error;
+                    }
+                }));
+            } else {
+                rankings = [];
+                averageRanking = 0;
+            }
+
+
+            ret = { id: id, artist: artist, releaseDate: releaseDate, genre: genre, coverArtUrl: coverArtUrl, averageRanking: averageRanking, rankings: rankings }
+
+        } else {
+            ret = { error: "Album Not Found" };
         }
 
         res.status(200).json(ret);
