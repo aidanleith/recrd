@@ -56,6 +56,34 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    app.post('/api/createRanking', async (req, res, next) => {
+        // incoming: albumId, rankvalue, notes, JWT
+        // outgoing: error
+        
+        const { albumId, rankValue, notes, jwtToken } = req.body;
+        decodedToken = jwt.decode(jwtToken);
+        //Might want to check if user has already added a ranking
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        const newRanking = {
+            user: objectDecodedId,
+            album: new ObjectId(String(albumId)),
+            rankValue: rankValue,
+            notes: notes,
+            createdAt: new Date()
+        };
+        console.log(newRanking);
+        var error = '';
+        try {
+            const db = client.db('recrd');
+
+            await db.collection('Rankings').insertOne(newRanking);
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        res.status(200).json(error);
+    });
+
     app.post('/api/addcard', async (req, res, next) => {
         // incoming: userId, color
         // outgoing: error
