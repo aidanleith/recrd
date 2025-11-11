@@ -1,5 +1,6 @@
 require('express');
-require('mongodb');
+const { ObjectId } = require('mongodb');
+const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
 
 //Install these in the backend folder if you dont have them
@@ -17,6 +18,44 @@ const app_name = 'localhost:5173'
 //const app_name = '45.55.136.167'
 
 exports.setApp = function (app, client) {
+    app.post('/api/followUser', async (req, res, next) => {
+        // incoming: userId, JWT
+        // outgoing: error
+        const { userId, jwtToken } = req.body;
+        try {
+            if (token.isExpired(jwtToken)) {
+                var r = { error: 'The JWT is no longer valid', jwtToken: '' };
+                res.status(200).json(r);
+                return;
+            }
+        }
+        catch (e) {
+            console.log(e.message);
+        }
+        var error = '';
+        decodedToken = jwt.decode(jwtToken);
+        var objectUserId = new ObjectId(String(userId));
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        try {
+            const db = client.db('recrd');
+            db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { following: objectUserId } });
+            db.collection('Users').findOneAndUpdate({ _id: objectUserId }, { $push: { followers: objectDecodedId } });
+            //console.log(test1, test2);
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        var refreshedToken = null;
+        try {
+            refreshedToken = token.refresh(jwtToken);
+        }
+        catch (e) {
+            console.log(e.message);
+        }
+        var ret = { error: error, jwtToken: refreshedToken };
+        res.status(200).json(ret);
+    });
+
     app.post('/api/addcard', async (req, res, next) => {
         // incoming: userId, color
         // outgoing: error
