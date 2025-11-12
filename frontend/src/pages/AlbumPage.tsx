@@ -163,14 +163,14 @@ function AlbumPage() {
         <div className='flex flex-row justify-between'>
           <div className='flex flex-col justify-between'>
             <div className="flex flex-col items-start">
-              <h1 className="text-5xl font-bold text-white text-center">
+              <h1 className="text-4xl font-bold text-white text-start">
                 {albumData.title || albumTitle}
               </h1>
-              <p className="text-2xl text-gray-400 text-center">
+              <p className="text-2xl text-gray-400 text-start">
                 {albumData.artist}
               </p>
               {albumData.releaseDate && (
-                <p className="text-lg text-gray-500 text-center">
+                <p className="text-lg text-gray-500 text-start">
                   {formatDate(albumData.releaseDate)}
                 </p>
               )}
@@ -193,7 +193,7 @@ function AlbumPage() {
           </div>
           <div className="flex flex-col justify-between gap-8 items-end">
             <div className="flex flex-col items-end gap-2">
-              <span className="text-gray-400 text-2xl">Your Ranking</span>
+              <span className="text-gray-400 text-xl">your ranking</span>
               {userRanking !== null ? (
                 <span className={`${getRankingBackgroundClass(userRanking)} text-white font-bold text-2xl px-4 py-2 rounded-lg`}>
                   {userRanking}/10
@@ -204,8 +204,8 @@ function AlbumPage() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-gray-400 text-2xl">Global Ranking</span>
+            <div className="flex flex-col items-end text-end gap-2">
+              <span className="text-gray-400 text-xl">global ranking</span>
               {albumData.averageRanking > 0 ? (
                 <span className={`${getRankingBackgroundClass(albumData.averageRanking)} text-white font-bold text-2xl px-4 py-2 rounded-lg`}>
                   {albumData.averageRanking.toFixed(1)}/10

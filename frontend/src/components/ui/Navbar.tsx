@@ -1,20 +1,76 @@
 // Removed "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // 1. Swapped imports from next/link and next/navigation
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IconUser } from "../../../public/icons/IconUser";
 import { IconHome } from "../../../public/icons/IconHome";
 import { IconAddCircle } from "../../../public/icons/IconAddCircle";
 import { IconList } from "../../../public/icons/IconList";
 import { IconSearch } from "../../../public/icons/IconSearch";
+import { buildPath } from '../Path';
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   // 2. Swapped usePathname() for useLocation()
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get current user's username
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.id) {
+          fetch(buildPath(`api/userById/${user.id}`))
+            .then(res => res.json())
+            .then(data => {
+              if (data.username) {
+                setCurrentUsername(data.username);
+              }
+            })
+            .catch(err => console.error('Error fetching username:', err));
+        }
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
+  }, []);
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentUsername) {
+      navigate(`/profile/${currentUsername}`);
+    } else {
+      // Fallback: try to get username first
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          if (user.id) {
+            fetch(buildPath(`api/userById/${user.id}`))
+              .then(res => res.json())
+              .then(data => {
+                if (data.username) {
+                  navigate(`/profile/${data.username}`);
+                } else {
+                  navigate('/profile');
+                }
+              })
+              .catch(() => navigate('/profile'));
+          }
+        } catch {
+          navigate('/profile');
+        }
+      } else {
+        navigate('/profile');
+      }
+    }
   };
 
   return (
@@ -73,16 +129,16 @@ export const Navbar = () => {
               >
                 <IconSearch className="w-7 h-7" />
               </Link>
-              <Link
-                to="/profile" // 4. Changed href -> to
+              <button
+                onClick={handleProfileClick}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                  isActive('/profile')
+                  pathname.startsWith('/profile')
                     ? 'border-primary text-(--primary)' // 5. Fixed
                     : 'border-transparent text-gray-500 hover:border-primary hover:text-(--primary)' // 5. Fixed
                 }`}
               >
                 <IconUser className="w-7 h-7" />
-              </Link>
+              </button>
             </div>
           </div>
 

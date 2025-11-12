@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface RankingCardProps {
   ranking: {
@@ -15,6 +16,8 @@ interface RankingCardProps {
 }
 
 function RankingCard({ ranking, album }: RankingCardProps) {
+  const navigate = useNavigate();
+
   const formatDate = (date: string | Date) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString('en-US', { 
@@ -30,12 +33,28 @@ function RankingCard({ ranking, album }: RankingCardProps) {
     return 'bg-red-500';                      // Poor (1-4)
   };
 
+  const handleUsernameClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering parent click (album navigation)
+    navigate(`/profile/${ranking.username}`);
+  };
+
+  const handleAlbumClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering parent click if any
+    const urlTitle = album.title.replace(/\s+/g, '-').toLowerCase();
+    navigate(`/album/${urlTitle}`);
+  };
+
   return (
     <div className="flex flex-col gap-3 p-3 rounded-lg group">
       {/* Header: [name] ranked a new album */}
       <div className="flex items-center gap-6">
         <div className='flex gap-2'>
-        <span className="text-white text-xl font-semibold">{ranking.username}</span>
+        <span 
+          className="text-white text-xl font-semibold cursor-pointer hover:text-(--primary) transition-colors"
+          onClick={handleUsernameClick}
+        >
+          {ranking.username}
+        </span>
         <span className="text-gray-400 text-xl">ranked an album</span>
         </div>
 
@@ -49,7 +68,7 @@ function RankingCard({ ranking, album }: RankingCardProps) {
       {/* Album info row - cover on left, title/artist on right */}
       <div className="flex flex-row gap-4 items-center">
         {/* Album cover - Left */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 cursor-pointer" onClick={handleAlbumClick}>
           {album.coverArtUrl ? (
             <img
               src={album.coverArtUrl}
@@ -65,8 +84,8 @@ function RankingCard({ ranking, album }: RankingCardProps) {
 
         {/* Album info - Right */}
         <div className="flex items-start min-w-0 flex-1 justify-between">
-          <div className='flex items-start flex-col'>
-            <h3 className="text-white font-bold text-xl truncate group-hover:text-(--primary) transition-colors">
+          <div className='flex items-start flex-col cursor-pointer' onClick={handleAlbumClick}>
+            <h3 className="text-white font-bold text-xl truncate hover:text-(--primary) transition-colors">
               {album.title}
             </h3>
             <p className="text-gray-400 text-xl truncate mt-1">

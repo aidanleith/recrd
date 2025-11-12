@@ -12,6 +12,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AlbumPage from './pages/AlbumPage';
 import RankAlbumPage from './pages/RankAlbumPage';
+import FollowersListPage from './pages/FollowersListPage';
+import FollowingListPage from './pages/FollowingListPage';
+import UserRankingsPage from './pages/UserRankingsPage';
 
 function App() {
   return (
@@ -28,7 +31,14 @@ function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/cards" element={<CardPage />} />
           <Route path='/home' element={<HomePage />} />
+          <Route path='/profile/followers' element={<FollowersListPage />} />
+          <Route path='/profile/following' element={<FollowingListPage />} />
+          <Route path='/profile/:username/followers' element={<FollowersListPage />} />
+          <Route path='/profile/:username/following' element={<FollowingListPage />} />
+          <Route path='/profile/:username/rankings' element={<UserRankingsPage />} />
+          <Route path='/profile/rankings' element={<UserRankingsPage />} />
           <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/profile/:username' element={<ProfilePage />} />
           <Route path='/search' element={<SearchPage />} />
           <Route path='/album/:title' element={<AlbumPage />} />
           <Route path='/album/:title/rank' element={<RankAlbumPage />} />

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { buildPath } from '../components/Path';
 import RankingCard from '../components/RankingCard';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 
 interface Ranking {
@@ -20,7 +19,6 @@ const HomePage = () => {
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -85,24 +83,16 @@ const HomePage = () => {
       {rankings.length > 0 ? (
         <div className="flex flex-col gap-3">
           {rankings.map((ranking, index) => (
-            <div
+            <RankingCard
               key={index}
-              onClick={() => {
-                const urlTitle = ranking.album.title.replace(/\s+/g, '-').toLowerCase();
-                navigate(`/album/${urlTitle}`);
+              ranking={{
+                username: ranking.username,
+                rankValue: ranking.rankValue,
+                notes: ranking.notes,
+                createdAt: ranking.createdAt
               }}
-              className="cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <RankingCard
-                ranking={{
-                  username: ranking.username,
-                  rankValue: ranking.rankValue,
-                  notes: ranking.notes,
-                  createdAt: ranking.createdAt
-                }}
-                album={ranking.album}
-              />
-            </div>
+              album={ranking.album}
+            />
           ))}
         </div>
       ) : (
