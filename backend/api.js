@@ -96,7 +96,7 @@ exports.setApp = function (app, client) {
     app.post('/api/createRanking', async (req, res, next) => {
         // incoming: albumId, rankvalue, notes, JWT
         // outgoing: error
-        
+
         const { albumId, rankValue, notes, jwtToken } = req.body;
         decodedToken = jwt.decode(jwtToken);
         //Might want to check if user has already added a ranking
@@ -120,11 +120,48 @@ exports.setApp = function (app, client) {
         }
         res.status(200).json(error);
     });
+    app.post('/api/addTopThree', async (req, res, next) => {
+        // incoming: albumId, JWT
+        // outgoing: error
+
+        const { albumId, jwtToken } = req.body;
+        decodedToken = jwt.decode(jwtToken);
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        var objectAlbumId = new ObjectId(String(albumId))
+        var error = '';
+        try {
+            const db = client.db('recrd');
+            await db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { top3: objectAlbumId } });
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        res.status(200).json(error);
+    });
+
+    app.post('/api/addToListen', async (req, res, next) => {
+        // incoming: albumId, JWT
+        // outgoing: error
+
+        const { albumId, jwtToken } = req.body;
+        decodedToken = jwt.decode(jwtToken);
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        var objectAlbumId = new ObjectId(String(albumId))
+        var error = '';
+        try {
+            const db = client.db('recrd');
+            await db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { toListen: objectAlbumId } });
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        res.status(200).json(error);
+    });
 
     app.patch('/api/editRanking', async (req, res, next) => {
         // incoming: albumId, rankValue, notes, JWT
         // outgoing: error
-        
+
         const { albumId, rankValue, notes, jwtToken } = req.body;
         decodedToken = jwt.decode(jwtToken);
         var objectDecodedId = new ObjectId(String(decodedToken.id));
@@ -133,7 +170,7 @@ exports.setApp = function (app, client) {
             const db = client.db('recrd');
 
             const result = await db.collection('Rankings').updateOne(
-                { 
+                {
                     user: objectDecodedId,
                     album: new ObjectId(String(albumId))
                 },
@@ -209,7 +246,7 @@ exports.setApp = function (app, client) {
             const hashedPassword = results[0].password;
             console.log('Comparing password (length:', trimmedPassword.length, '):', JSON.stringify(trimmedPassword), 'with hash:', hashedPassword);
             console.log('Hash type:', typeof hashedPassword, 'Hash length:', hashedPassword ? hashedPassword.length : 'null');
-            
+
             // Verify hash format (bcrypt hashes start with $2a$, $2b$, or $2y$)
             if (!hashedPassword || typeof hashedPassword !== 'string' || !hashedPassword.startsWith('$2')) {
                 console.log('ERROR: Invalid hash format in database!');
@@ -592,7 +629,7 @@ exports.setApp = function (app, client) {
         console.log('Searching for album with title:', title);
         const db = client.db('recrd'); // Use the actual DB name
         // Use case-insensitive search with regex
-        const albumResults = await db.collection('Albums').find({ 
+        const albumResults = await db.collection('Albums').find({
             title: { $regex: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
         }).toArray();
         console.log('DB QUERY RESULTS:', albumResults);
@@ -720,7 +757,7 @@ exports.setApp = function (app, client) {
                     const rankingResults = await db.collection('Rankings').find({ album: album._id }).toArray();
                     var averageRanking = 0;
                     var rankingCount = rankingResults.length;
-                    
+
                     if (rankingResults.length > 0) {
                         var totalRankingAmount = 0;
                         rankingResults.forEach(ranking => {
@@ -731,14 +768,14 @@ exports.setApp = function (app, client) {
                     } else {
                         console.log(`Album ${album.title}: No rankings found`);
                     }
-                    
+
                     return {
                         ...album,
                         averageRanking: averageRanking,
                         rankingCount: rankingCount
                     };
                 }));
-                
+
                 //return list of albums with average rankings
                 return res.status(200).json(albumsWithRankings);
             }
@@ -783,12 +820,12 @@ exports.setApp = function (app, client) {
         // outgoing: array of rankings with username, rankValue, notes, createdAt, album info
         try {
             const db = client.db('recrd');
-            
+
             // Get all rankings sorted by createdAt ascending (earliest first)
             const rankingResults = await db.collection('Rankings').find({}).sort({ createdAt: 1 }).toArray();
-            
+
             console.log('Found rankings:', rankingResults.length);
-            
+
             if (rankingResults.length === 0) {
                 return res.status(200).json([]);
             }
@@ -853,7 +890,7 @@ exports.setApp = function (app, client) {
             console.log(e.message);
             return res.status(401).json({ error: 'Invalid token' });
         }
-        
+
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         console.log('Decoded token:', decodedToken);
@@ -873,18 +910,18 @@ exports.setApp = function (app, client) {
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
-            
+
             //get all relevant user data. NOTE: see separate api for interacting with followers/following
             const user = userResults[0];
             const toListen = user.toListen;
             const topThree = user.top3;
             const followerCount = user.followers.length;
             const followingCount = user.following.length;
-            
+
             //get user's rankings
             const rankingResults = await db.collection('Rankings').find({ user: userId }).toArray();
             const numRankings = rankingResults.length;
-            
+
             //get album info for each ranking
             //albums is array of what is returned for each ranking document within ranking results
             const albums = await Promise.all(rankingResults.map(async ranking => {
@@ -906,7 +943,7 @@ exports.setApp = function (app, client) {
                     return null;
                 }
             }));
-            
+
             // Filter out any null values from failed album lookups
             const validAlbums = albums.filter(album => album !== null);
             
@@ -937,7 +974,7 @@ exports.setApp = function (app, client) {
             } catch (e) {
                 console.log(e.message);
             }
-            
+
             const ret = {
                 id: userId,
                 username: user.username,
@@ -950,9 +987,9 @@ exports.setApp = function (app, client) {
                 numRankings: numRankings,
                 jwtToken: refreshedToken
             };
-            
+
             res.status(200).json(ret);
-            
+
         } catch (error) {
             console.error("Error fetching profile:", error);
             res.status(500).json({ error: "An error occurred fetching the profile" });
@@ -974,25 +1011,25 @@ exports.setApp = function (app, client) {
             console.log(e.message);
             return res.status(401).json({ error: 'Invalid token' });
         }
-        
+
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         const userId = new ObjectId(String(decodedToken.id));
-        try{
+        try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
-            
+
             const user = userResults[0];
             const followerIds = user.followers;
             //look up each follower's user info
             const followers = await db.collection('Users').find({
                 _id: { $in: followerIds }  //find all users whose _id is in the followerIds array
             }).toArray();
-            
+
             //returns id and username
             const followersList = followers.map(follower => ({
                 _id: follower._id,
@@ -1000,7 +1037,7 @@ exports.setApp = function (app, client) {
             }));
             res.status(200).json(followersList);
         }
-        catch (e){
+        catch (e) {
             console.error("Error fetching profile:", e);
             res.status(500).json({ error: "An error occurred fetching the profile" });
         }
@@ -1021,25 +1058,25 @@ exports.setApp = function (app, client) {
             console.log(e.message);
             return res.status(401).json({ error: 'Invalid token' });
         }
-        
+
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         const userId = new ObjectId(String(decodedToken.id));
-        try{
+        try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
-            
+
             const user = userResults[0];
             const followingIds = user.following;
             //look up each following's user info
             const followings = await db.collection('Users').find({
                 _id: { $in: followingIds }  //find all users whose _id is in the followingIds array
             }).toArray();
-            
+
             //returns id and username
             const followingList = followings.map(following => ({
                 _id: following._id,
@@ -1047,7 +1084,7 @@ exports.setApp = function (app, client) {
             }));
             res.status(200).json(followingList);
         }
-        catch (e){
+        catch (e) {
             console.error("Error fetching profile:", e);
             res.status(500).json({ error: "An error occurred fetching the profile" });
         }
