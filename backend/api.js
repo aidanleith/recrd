@@ -59,7 +59,7 @@ exports.setApp = function (app, client) {
     app.post('/api/createRanking', async (req, res, next) => {
         // incoming: albumId, rankvalue, notes, JWT
         // outgoing: error
-        
+
         const { albumId, rankValue, notes, jwtToken } = req.body;
         decodedToken = jwt.decode(jwtToken);
         //Might want to check if user has already added a ranking
@@ -77,6 +77,44 @@ exports.setApp = function (app, client) {
             const db = client.db('recrd');
 
             await db.collection('Rankings').insertOne(newRanking);
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        res.status(200).json(error);
+    });
+
+    app.post('/api/addTopThree', async (req, res, next) => {
+        // incoming: albumId, JWT
+        // outgoing: error
+
+        const { albumId, jwtToken } = req.body;
+        decodedToken = jwt.decode(jwtToken);
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        var objectAlbumId = new ObjectId(String(albumId))
+        var error = '';
+        try {
+            const db = client.db('recrd');
+            await db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { top3: objectAlbumId } });
+        }
+        catch (e) {
+            error = e.toString();
+        }
+        res.status(200).json(error);
+    });
+
+    app.post('/api/addToListen', async (req, res, next) => {
+        // incoming: albumId, JWT
+        // outgoing: error
+
+        const { albumId, jwtToken } = req.body;
+        decodedToken = jwt.decode(jwtToken);
+        var objectDecodedId = new ObjectId(String(decodedToken.id));
+        var objectAlbumId = new ObjectId(String(albumId))
+        var error = '';
+        try {
+            const db = client.db('recrd');
+            await db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { toListen: objectAlbumId } });
         }
         catch (e) {
             error = e.toString();
