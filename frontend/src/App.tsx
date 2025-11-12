@@ -9,6 +9,9 @@ import { ProtectedLayout } from './layouts/ProtectedLayout';
 import VerifyPage from './pages/VerifyPage';
 import SearchPage from './pages/SearchPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import AlbumPage from './pages/AlbumPage';
+import RankAlbumPage from './pages/RankAlbumPage';
 
 function App() {
   return (
@@ -18,6 +21,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/verify' element={<VerifyPage />} />
+        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route path='/reset-password/:token' element={<ResetPasswordPage />} />
         {/* Protected routes */}
         <Route element={<ProtectedLayout />}>
@@ -26,6 +30,8 @@ function App() {
           <Route path='/home' element={<HomePage />} />
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/search' element={<SearchPage />} />
+          <Route path='/album/:title' element={<AlbumPage />} />
+          <Route path='/album/:title/rank' element={<RankAlbumPage />} />
         </Route>
 
         {/* Fallback route */}

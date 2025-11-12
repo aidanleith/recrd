@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+// @ts-ignore
+import { buildPath } from '../components/Path';
+import AlbumDisplay from '../components/AlbumDisplay';
 
 // 1. Define the "shape" of your data
 interface Album {
-  _id: string; // Or 'number', whatever your ID type is
+  _id: string;
   title: string;
-  // Add any other properties you might use, e.g., 'artist'
+  artist: string;
+  coverArtUrl?: string;
+  releaseDate?: string;
+  genre?: string;
+  averageRanking?: number;
+  rankingCount?: number;
 }
 
 interface User {
@@ -14,6 +23,7 @@ interface User {
 }
 
 function SearchPage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState('albums');
   
@@ -23,6 +33,13 @@ function SearchPage() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  // Sort state
+  const [sortBy, setSortBy] = useState<string>('none');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,26 +49,35 @@ function SearchPage() {
     // Clear both result sets
     setAlbumResults([]);
     setUserResults([]);
+    // Reset to first page when searching
+    setCurrentPage(1);
 
     let apiUrl = '';
     let requestBody = {};
 
     if (searchType === 'albums') {
-      apiUrl = '/api/searchAlbums';
+      apiUrl = 'api/searchAlbums';
       requestBody = { title: query };
     } else {
-      apiUrl = '/api/searchUsers';
+      apiUrl = 'api/searchUsers';
       requestBody = { search: query };
     }
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(buildPath(apiUrl), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
+
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
 
       const data = await response.json();
 
@@ -61,6 +87,7 @@ function SearchPage() {
 
       // 4. Set the correct state based on the search
       if (searchType === 'albums') {
+        console.log('Album results with rankings:', data);
         setAlbumResults(data);
       } else {
         setUserResults(data);
@@ -78,35 +105,233 @@ function SearchPage() {
     }
   };
 
+  // Sort and paginate results
+  const getSortedAndPaginatedResults = () => {
+    let results = searchType === 'albums' ? [...albumResults] : [...userResults];
+    
+    // Apply sorting for albums
+    if (searchType === 'albums' && sortBy !== 'none') {
+      results.sort((a, b) => {
+        const albumA = a as Album;
+        const albumB = b as Album;
+        
+        switch (sortBy) {
+          case 'highest-ranking':
+            // Highest to lowest average ranking
+            const avgA = albumA.averageRanking || 0;
+            const avgB = albumB.averageRanking || 0;
+            return avgB - avgA;
+            
+          case 'lowest-ranking':
+            // Lowest to highest average ranking
+            const avgA2 = albumA.averageRanking || 0;
+            const avgB2 = albumB.averageRanking || 0;
+            return avgA2 - avgB2;
+            
+          case 'most-rankings':
+            // Most rankings to least
+            const countA = albumA.rankingCount || 0;
+            const countB = albumB.rankingCount || 0;
+            return countB - countA;
+            
+          case 'least-rankings':
+            // Least rankings to most
+            const countA2 = albumA.rankingCount || 0;
+            const countB2 = albumB.rankingCount || 0;
+            return countA2 - countB2;
+            
+          case 'alphabetical-az':
+            // Alphabetical A-Z by title
+            const titleA = albumA.title.toLowerCase();
+            const titleB = albumB.title.toLowerCase();
+            if (titleA < titleB) return -1;
+            if (titleA > titleB) return 1;
+            return 0;
+            
+          case 'alphabetical-za':
+            // Alphabetical Z-A by title
+            const titleA2 = albumA.title.toLowerCase();
+            const titleB2 = albumB.title.toLowerCase();
+            if (titleA2 > titleB2) return -1;
+            if (titleA2 < titleB2) return 1;
+            return 0;
+            
+          case 'newest-release':
+            // Newest to oldest release date
+            const dateA = albumA.releaseDate ? new Date(albumA.releaseDate).getTime() : 0;
+            const dateB = albumB.releaseDate ? new Date(albumB.releaseDate).getTime() : 0;
+            return dateB - dateA; // Newest first (larger date value first)
+            
+          case 'oldest-release':
+            // Oldest to newest release date
+            const dateA2 = albumA.releaseDate ? new Date(albumA.releaseDate).getTime() : 0;
+            const dateB2 = albumB.releaseDate ? new Date(albumB.releaseDate).getTime() : 0;
+            return dateA2 - dateB2; // Oldest first (smaller date value first)
+            
+          default:
+            return 0;
+        }
+      });
+    }
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return results.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = () => {
+    const results = searchType === 'albums' ? albumResults : userResults;
+    return Math.ceil(results.length / itemsPerPage);
+  };
+
+  const totalPages = getTotalPages();
+  const paginatedResults = getSortedAndPaginatedResults();
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-center gap-2 mt-6">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a2a2a] transition-colors"
+        >
+          previous
+        </button>
+        
+        {startPage > 1 && (
+          <>
+            <button
+              onClick={() => setCurrentPage(1)}
+              className="px-3 py-2 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white hover:bg-[#2a2a2a] transition-colors"
+            >
+              1
+            </button>
+            {startPage > 2 && <span className="text-gray-500">...</span>}
+          </>
+        )}
+
+        {pages.map((page) => (
+          <button
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`px-3 py-2 rounded-lg border transition-colors ${
+              currentPage === page
+                ? 'bg-(--primary) border-(--primary) text-white'
+                : 'bg-[#1e1e1e] border-(--primary) text-white hover:bg-[#2a2a2a]'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="text-gray-500">...</span>}
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              className="px-3 py-2 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white hover:bg-[#2a2a2a] transition-colors"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a2a2a] transition-colors"
+        >
+          next
+        </button>
+      </div>
+    );
+  };
+
   const renderResults = () => {
-    if (isLoading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: 'red' }}>{error}</p>;
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center py-12">
+          <p className="text-(--darktext)">Loading...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="flex justify-center items-center py-12">
+          <p className="text-red-500">{error}</p>
+        </div>
+      );
+    }
 
     // 6. Render based on the specific, typed result arrays
     if (searchType === 'albums' && albumResults.length > 0) {
       return (
-        <div>
-          <h3>Album Results</h3>
-          <ul>
-            {/* TS now knows 'album' is of type 'Album' */}
-            {albumResults.map((album) => (
-              <li key={album._id}>{album.title}</li>
-            ))}
-          </ul>
+        <div className="mt-6">
+          {/* <h3 className="text-2xl font-bold text-white mb-4">
+            Album Results ({albumResults.length} {albumResults.length === 1 ? 'result' : 'results'})
+          </h3> */}
+          <div className="space-y-1">
+            {paginatedResults.map((album, index) => {
+              // Calculate the actual position in the full results (1-indexed)
+              const position = (currentPage - 1) * itemsPerPage + index + 1;
+              return (
+                <div key={album._id} className="flex items-center gap-4">
+                  <span className="text-gray-400 text-sm font-medium w-8 text-right">
+                    {position}
+                  </span>
+                  <div className="flex-1">
+                    <AlbumDisplay
+                      album={album as Album}
+                      onClick={() => {
+                        // Navigate to album detail page
+                        const urlTitle = (album as Album).title.replace(/\s+/g, '-').toLowerCase();
+                        navigate(`/album/${urlTitle}`);
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {renderPagination()}
         </div>
       );
     }
     
     if (searchType === 'users' && userResults.length > 0) {
       return (
-        <div>
-          <h3>User Results</h3>
-          <ul>
-            {/* TS now knows 'user' is of type 'User' */}
-            {userResults.map((user) => (
-              <li key={user._id}>{user.username}</li>
+        <div className="mt-6">
+          <h3 className="text-2xl font-bold text-white mb-4">
+            user results ({userResults.length} {userResults.length === 1 ? 'result' : 'results'})
+          </h3>
+          <div className="space-y-2">
+            {paginatedResults.map((user) => (
+              <div
+                key={user._id}
+                className="p-3 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+              >
+                <p className="text-white font-semibold">{(user as User).username}</p>
+              </div>
             ))}
-          </ul>
+          </div>
+          {renderPagination()}
         </div>
       );
     }
@@ -116,45 +341,75 @@ function SearchPage() {
   };
 
   return (
-    <div>
-      <h2>Search</h2>
+    <div className="flex flex-col gap-6">
+      {/* <h2 className="text-4xl font-bold text-white">Search</h2> */}
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ marginRight: '1rem' }}>
-          <input
-            type="radio"
-            value="albums"
-            checked={searchType === 'albums'}
-            onChange={(e) => setSearchType(e.target.value)}
-          />
-          Search Albums
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="users"
-            checked={searchType === 'users'}
-            onChange={(e) => setSearchType(e.target.value)}
-          />
-          Search Users
-        </label>
+      <div className="flex gap-3 mb-4">
+        <button
+          type="button"
+          onClick={() => setSearchType('albums')}
+          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            searchType === 'albums'
+              ? 'bg-yellow-400 text-black'
+              : 'bg-transparent text-white hover:bg-[#2a2a2a]'
+          }`}
+        >
+          albums
+        </button>
+        <button
+          type="button"
+          onClick={() => setSearchType('users')}
+          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            searchType === 'users'
+              ? 'bg-yellow-400 text-black'
+              : 'bg-transparent text-white hover:bg-[#2a2a2a]'
+          }`}
+        >
+          users
+        </button>
       </div>
 
-      <form onSubmit={handleSearch}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={searchType === 'albums' ? 'Enter album title...' : 'Enter username...'}
-          style={{ width: '300px' }}
-        />
-        {/* 1. Fixed 'typeS' to 'type' */}
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Searching...' : 'Search'}
-        </button>
-      </form>
+      <div className="flex gap-3 items-center">
+        <form onSubmit={handleSearch} className="flex gap-3 flex-1">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchType === 'albums' ? 'enter album title or artist...' : 'enter username...'}
+            className="flex-1 max-w-md h-12 px-4 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-6 h-12 rounded-lg bg-(--primary) text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          >
+            {isLoading ? 'searching...' : 'search'}
+          </button>
+        </form>
+        
+        {searchType === 'albums' && albumResults.length > 0 && (
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setCurrentPage(1); // Reset to first page when sorting changes
+            }}
+            className="h-12 px-4 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white focus:outline-none focus:ring-2 focus:ring-(--primary) cursor-pointer"
+          >
+            <option value="none">Sort by...</option>
+            <option value="highest-ranking">Highest Ranking ↓</option>
+            <option value="lowest-ranking">Lowest Ranking ↑</option>
+            <option value="most-rankings">Most Rankings ↓</option>
+            <option value="least-rankings">Least Rankings ↑</option>
+            <option value="alphabetical-az">Alphabetical A-Z</option>
+            <option value="alphabetical-za">Alphabetical Z-A</option>
+            <option value="newest-release">Newest Release ↓</option>
+            <option value="oldest-release">Oldest Release ↑</option>
+          </select>
+        )}
+      </div>
 
-      <div style={{ marginTop: '1.5rem' }}>
+      <div>
         {renderResults()}
       </div>
     </div>
