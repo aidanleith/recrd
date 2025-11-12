@@ -37,7 +37,7 @@ function Login() {
                     var user = { email: email, id: userId };
                     localStorage.setItem('user_data', JSON.stringify(user));
                     setMessage('');
-                    window.location.href = '/cards';
+                    window.location.href = '/home';
                 }
             }
             catch (e) {
@@ -75,8 +75,11 @@ function Login() {
                 >
                     Login
                 </Button>
-                <h2>forgot your password?</h2>
-                {/* make it a link not an h2 */}
+                <Link to="/forgot-password">
+                    <h2 className="text-(--primary) font-bold hover:underline text-center">
+                        forgot your password?
+                    </h2>
+                </Link>
             </div>
             <div className="flex w-full justify-between">
                 <h2 className="text-(--darktext) font-bold">don't have an account?</h2>
