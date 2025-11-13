@@ -404,7 +404,9 @@ export default function ProfilePage() {
       
       // Create new top3 array - first remove the album from any other position if it exists
       let newTop3 = safeCurrentTop3.filter((existingAlbum, index) => {
-        const existingId = String(existingAlbum?._id || existingAlbum?.albumId || '');
+        /* removed || existingAlbum?.albumId from this statement,
+         albumId doesnt exist in existingAlbum so it would never run*/
+        const existingId = String(existingAlbum?._id || '');
         const newId = String(albumId || '');
         // Keep the album if:
         // 1. It's at the selectedIndex (we'll replace it)
@@ -467,7 +469,9 @@ export default function ProfilePage() {
           if (isReplacing) {
             // Use PATCH to replace at specific position
             // Ensure we have valid album IDs
-            const top3Ids = finalTop3.map(album => album?._id || album?.albumId).filter(id => id && id !== '');
+            /* removed || existingAlbum?.albumId from this statement,
+            albumId doesnt exist in existingAlbum so it would never run*/
+            const top3Ids = finalTop3.map(album => album?._id).filter(id => id && id !== '');
             
             // Safety check: if we somehow only have one album but should have more, log a warning
             if (top3Ids.length === 1 && safeCurrentTop3.length > 1) {
@@ -729,8 +733,8 @@ export default function ProfilePage() {
       />
 
       <div className="">
-        <div className="flex items-center gap-10 mt-6 mb-4">
-          <h2 className="text-2xl font-bold text-white">favorite albums</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-10 mt-6 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">favorite albums</h2>
           <div className="flex gap-2">
           <Button
               onClick={() => navigate(urlUsername ? `/profile/${urlUsername}/rankings` : "/profile/rankings")}
@@ -742,7 +746,7 @@ export default function ProfilePage() {
 
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 w-full">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full">
           {Array.from({ length: 3 }).map((_, index) => {
             const album = topThreeAlbums[index];
             const isEmpty = !album;

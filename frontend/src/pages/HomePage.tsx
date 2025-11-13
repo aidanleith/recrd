@@ -108,11 +108,11 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* <h1 className="text-3xl font-bold text-white text-start">all rankings</h1> */}
       {rankings.length > 0 ? (
         <>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {rankings.map((ranking, index) => (
               <RankingCard
                 key={index}

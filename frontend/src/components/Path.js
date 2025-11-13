@@ -1,4 +1,4 @@
-const app_name = '45.55.136.167'
+const app_name = 'ntw234.xyz'
     export function buildPath(route) {
         if (process.env.NODE_ENV != 'development') {
             return 'http://' + app_name + ':5000/' + route;
