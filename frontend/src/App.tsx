@@ -42,8 +42,8 @@ function App() {
           <Route path='/profile/:username' element={<ProfilePage />} />
           <Route path='/search' element={<SearchPage />} />
           <Route path='/leaderboard' element={<LeaderboardPage />} />
-          <Route path='/album/:title' element={<AlbumPage />} />
-          <Route path='/album/:title/rank' element={<RankAlbumPage />} />
+          <Route path='/album/:id' element={<AlbumPage />} />
+          <Route path='/album/:id/rank' element={<RankAlbumPage />} />
         </Route>
 
         {/* Fallback route */}

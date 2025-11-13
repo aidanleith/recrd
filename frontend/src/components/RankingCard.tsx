@@ -9,6 +9,7 @@ interface RankingCardProps {
     createdAt: string | Date;
   };
   album: {
+    _id?: string;
     title: string;
     artist: string;
     coverArtUrl?: string;
@@ -40,8 +41,9 @@ function RankingCard({ ranking, album }: RankingCardProps) {
 
   const handleAlbumClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent click if any
-    const urlTitle = album.title.replace(/\s+/g, '-').toLowerCase();
-    navigate(`/album/${urlTitle}`);
+    if (album._id) {
+      navigate(`/album/${album._id}`);
+    }
   };
 
   return (

@@ -9,6 +9,7 @@ interface Ranking {
   notes?: string;
   createdAt: string | Date;
   album: {
+    _id?: string;
     title: string;
     artist: string;
     coverArtUrl?: string;

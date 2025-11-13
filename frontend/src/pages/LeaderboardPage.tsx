@@ -164,8 +164,7 @@ function LeaderboardPage() {
                       <AlbumDisplay
                         album={album}
                         onClick={() => {
-                          const urlTitle = album.title.replace(/\s+/g, '-').toLowerCase();
-                          navigate(`/album/${urlTitle}`);
+                          navigate(`/album/${album._id}`);
                         }}
                       />
                     </div>

@@ -21,7 +21,7 @@ interface AlbumData {
 }
 
 function RankAlbumPage() {
-  const { title } = useParams<{ title: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [albumData, setAlbumData] = useState<AlbumData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +34,8 @@ function RankAlbumPage() {
 
   useEffect(() => {
     const fetchAlbum = async () => {
-      if (!title) {
-        setError('No album title provided');
+      if (!id) {
+        setError('No album ID provided');
         setIsLoading(false);
         return;
       }
@@ -44,9 +44,7 @@ function RankAlbumPage() {
       setError('');
 
       try {
-        // Convert URL title (with dashes) back to regular title
-        const albumTitle = title.replace(/-/g, ' ');
-        const response = await fetch(buildPath(`api/albums/${encodeURIComponent(albumTitle)}`));
+        const response = await fetch(buildPath(`api/albums/${id}`));
 
         const data = await response.json();
 
@@ -100,7 +98,7 @@ function RankAlbumPage() {
     };
 
     fetchAlbum();
-  }, [title]);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,8 +140,7 @@ function RankAlbumPage() {
         setError(data);
       } else {
         // Success - navigate back to album page
-        const urlTitle = albumData.title ? albumData.title.replace(/\s+/g, '-').toLowerCase() : title;
-        navigate(`/album/${urlTitle}`);
+        navigate(`/album/${albumData.id}`);
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -180,7 +177,7 @@ function RankAlbumPage() {
     );
   }
 
-  const albumTitle = albumData.title || (title ? title.replace(/-/g, ' ') : 'Unknown Album');
+  const albumTitle = albumData.title || 'Unknown Album';
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl mx-auto">
@@ -290,8 +287,7 @@ function RankAlbumPage() {
           <button
             type="button"
             onClick={() => {
-              const urlTitle = albumData.title ? albumData.title.replace(/\s+/g, '-').toLowerCase() : title;
-              navigate(`/album/${urlTitle}`);
+              navigate(`/album/${albumData.id}`);
             }}
             className="px-6 py-3 bg-[#2a2a2a] text-white font-semibold rounded-lg hover:bg-[#3a3a3a] transition-colors"
           >

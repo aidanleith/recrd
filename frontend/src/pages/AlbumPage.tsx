@@ -23,7 +23,7 @@ interface AlbumData {
 }
 
 function AlbumPage() {
-  const { title } = useParams<{ title: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [albumData, setAlbumData] = useState<AlbumData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,8 +33,8 @@ function AlbumPage() {
 
   useEffect(() => {
     const fetchAlbum = async () => {
-      if (!title) {
-        setError('No album title provided');
+      if (!id) {
+        setError('No album ID provided');
         setIsLoading(false);
         return;
       }
@@ -43,9 +43,7 @@ function AlbumPage() {
       setError('');
 
       try {
-        // Convert URL title (with dashes) back to regular title
-        const albumTitle = title.replace(/-/g, ' ');
-        const response = await fetch(buildPath(`api/albums/${encodeURIComponent(albumTitle)}`));
+        const response = await fetch(buildPath(`api/albums/${id}`));
 
         const data = await response.json();
 
@@ -97,7 +95,7 @@ function AlbumPage() {
     };
 
     fetchAlbum();
-  }, [title]);
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -138,8 +136,8 @@ function AlbumPage() {
     return 'bg-red-500';                      // Poor (1-4)
   };
 
-  // Get album title from albumData if available, otherwise from URL
-  const albumTitle = albumData ? (albumData as any).title || (title ? title.replace(/-/g, ' ') : 'Unknown Album') : (title ? title.replace(/-/g, ' ') : 'Unknown Album');
+  // Get album title from albumData
+  const albumTitle = albumData?.title || 'Unknown Album';
 
   return (
     <div className="flex flex-col gap-8">
@@ -179,8 +177,7 @@ function AlbumPage() {
             <div className="flex justify-start">
               <Button
                 onClick={() => {
-                  const urlTitle = albumData.title ? albumData.title.replace(/\s+/g, '-').toLowerCase() : title;
-                  navigate(`/album/${urlTitle}/rank`);
+                  navigate(`/album/${albumData.id}/rank`);
                 }}
                 variant="tertiary"
                 size="md"
@@ -229,6 +226,7 @@ function AlbumPage() {
                 key={index}
                 ranking={ranking}
                 album={{
+                  _id: albumData.id,
                   title: albumData.title || albumTitle,
                   artist: albumData.artist,
                   coverArtUrl: albumData.coverArtUrl

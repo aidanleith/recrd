@@ -35,19 +35,23 @@ export const Top3Modal: React.FC<Top3ModalProps> = ({
         : null;
       
       // Filter out albums that are already in top3, but allow the album at selectedIndex
+      // Only include albums that have valid IDs
       const currentTop3Ids = currentTop3
         .map((album, index) => {
           // Exclude the album at selectedIndex from the filter
           if (index === selectedIndex) return null;
-          return album._id || album.albumId;
+          const id = album?._id || album?.albumId;
+          return id ? String(id) : null;
         })
-        .filter(id => id !== null && id !== undefined)
+        .filter(id => id !== null && id !== undefined && id !== '')
         .map(id => String(id));
       
       const available = userRankings.filter(album => {
         const albumId = String(album._id || album.albumId || '');
+        // Only include albums with valid IDs
+        if (!albumId || albumId === '') return false;
         // Allow if it's not in the filtered list, or if it's the album at the selected index
-        return albumId && (!currentTop3Ids.includes(albumId) || albumId === selectedAlbumId);
+        return !currentTop3Ids.includes(albumId) || albumId === selectedAlbumId;
       });
       
       setFilteredAlbums(available);

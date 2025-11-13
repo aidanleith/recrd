@@ -47,10 +47,15 @@ exports.setApp = function (app, client) {
         }
         var refreshedToken = null;
         try {
-            refreshedToken = token.refresh(jwtToken);
+            const refreshResult = token.refresh(jwtToken);
+            if (refreshResult && refreshResult.accessToken) {
+                refreshedToken = refreshResult.accessToken;
+            } else if (refreshResult && refreshResult.error) {
+                console.error('Token refresh error:', refreshResult.error);
+            }
         }
         catch (e) {
-            console.log(e.message);
+            console.log('Token refresh exception:', e.message);
         }
         var ret = { error: error, jwtToken: refreshedToken };
         res.status(200).json(ret);
@@ -129,12 +134,13 @@ exports.setApp = function (app, client) {
         
         var error = '';
         var refreshedToken = null;
+        var operationSuccess = false;
         
         try {
             if (!jwtToken || token.isExpired(jwtToken)) {
                 error = 'The JWT is no longer valid';
             } else {
-                decodedToken = jwt.decode(jwtToken);
+                const decodedToken = jwt.decode(jwtToken);
                 if (!decodedToken || !decodedToken.id) {
                     error = 'Invalid token: missing user ID';
                 } else {
@@ -171,6 +177,8 @@ exports.setApp = function (app, client) {
                                     { _id: objectDecodedId }, 
                                     { $set: { top3: finalTop3 } }
                                 );
+                                // Mark operation as successful
+                                operationSuccess = true;
                             } catch (validationError) {
                                 // If validation fails, try to get more details
                                 console.error('Validation error details:', JSON.stringify(validationError.errInfo, null, 2));
@@ -181,7 +189,10 @@ exports.setApp = function (app, client) {
                                         { $set: { top3: finalTop3 } },
                                         { bypassDocumentValidation: true }
                                     );
+                                    // Mark operation as successful
+                                    operationSuccess = true;
                                 } catch (bypassError) {
+                                    error = 'Failed to update top 3: ' + validationError.toString();
                                     throw validationError; // Throw original error if bypass also fails
                                 }
                             }
@@ -191,16 +202,38 @@ exports.setApp = function (app, client) {
             }
         } catch (e) {
             console.error('Error in addTopThree:', e);
-            error = e.toString();
+            // Only set error if operation didn't succeed
+            if (!operationSuccess) {
+                error = e.toString();
+            }
         }
         
-        // Try to refresh token
+        // If operation succeeded, clear any error that might have been set
+        if (operationSuccess) {
+            error = '';
+        }
+        
+        // Try to refresh token - always try if we have a token, even if there was an error
         try {
-            if (jwtToken && !error.includes('JWT') && !error.includes('token') && !error.includes('valid')) {
-                refreshedToken = token.refresh(jwtToken);
+            if (jwtToken) {
+                const refreshResult = token.refresh(jwtToken);
+                // refresh() returns { accessToken: "..." } or { error: "..." }
+                if (refreshResult && refreshResult.accessToken) {
+                    refreshedToken = refreshResult.accessToken;
+                } else if (refreshResult && refreshResult.error) {
+                    console.error('Token refresh error:', refreshResult.error);
+                    // Only set error if operation didn't succeed and token refresh failed
+                    if (!operationSuccess && !error) {
+                        error = 'Token refresh failed: ' + refreshResult.error;
+                    }
+                }
             }
         } catch (e) {
-            console.log(e.message);
+            console.log('Token refresh exception:', e.message);
+            // Only set error if operation didn't succeed
+            if (!operationSuccess && !error) {
+                error = 'Token refresh exception: ' + e.message;
+            }
         }
         
         var ret = { error: error, jwtToken: refreshedToken };
@@ -685,82 +718,86 @@ exports.setApp = function (app, client) {
         }
     });
 
-    app.get('/api/albums/:title', async (req, res, next) => {
-        // incoming: 
+    app.get('/api/albums/:id', async (req, res, next) => {
+        // incoming: album ID
         // outgoing: id, artist, releaseDate, genre, coverArtUrl, averageRanking, rankings
         // rankings = { username, rankvalue, notes, createdAt }
 
-        // Might want to use ID instead of name because of special characters
-        // Would have to change search albums api as well
-        const title = req.params.title.replace(/-/g, ' ');
+        const albumId = req.params.id;
 
-        console.log('Searching for album with title:', title);
+        console.log('Searching for album with ID:', albumId);
         const db = client.db('recrd'); // Use the actual DB name
-        // Use case-insensitive search with regex
-        const albumResults = await db.collection('Albums').find({
-            title: { $regex: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-        }).toArray();
-        console.log('DB QUERY RESULTS:', albumResults);
-        var error = '';
-        var ret;
-        var id = -1;
-        var artist, genre, coverArtUrl;
-        var releaseDate;
-        var averageRanking;
-        if (albumResults.length > 0) {
-            id = albumResults[0]._id;
-            const albumTitle = albumResults[0].title;
-            artist = albumResults[0].artist;
-            genre = albumResults[0].genre;
-            coverArtUrl = albumResults[0].coverArtUrl;
-            releaseDate = albumResults[0].releaseDate;
+        
+        try {
+            // Convert string ID to ObjectId
+            const objectId = new ObjectId(albumId);
+            const albumResults = await db.collection('Albums').find({ _id: objectId }).toArray();
+            console.log('DB QUERY RESULTS:', albumResults);
+            
+            var error = '';
+            var ret;
+            var id = -1;
+            var artist, genre, coverArtUrl;
+            var releaseDate;
+            var averageRanking;
+            
+            if (albumResults.length > 0) {
+                id = albumResults[0]._id;
+                const albumTitle = albumResults[0].title;
+                artist = albumResults[0].artist;
+                genre = albumResults[0].genre;
+                coverArtUrl = albumResults[0].coverArtUrl;
+                releaseDate = albumResults[0].releaseDate;
 
-            //Might want to make this only display 5 most recent and then allow a view all option
-            const rankingResults = await db.collection('Rankings').find({ album: id }).toArray();
-            var rankings;
+                //Might want to make this only display 5 most recent and then allow a view all option
+                const rankingResults = await db.collection('Rankings').find({ album: id }).toArray();
+                var rankings;
 
-            var totalRankingAmount = 0;
-            rankingResults.forEach(ranking => {
-                totalRankingAmount += ranking.rankValue;
-            });
-            averageRanking = totalRankingAmount / rankingResults.length;
+                var totalRankingAmount = 0;
+                rankingResults.forEach(ranking => {
+                    totalRankingAmount += ranking.rankValue;
+                });
+                averageRanking = totalRankingAmount / rankingResults.length;
 
-            if (rankingResults.length > 0) {
-                //Gets album info for each album and compiles it to be returned
-                rankings = await Promise.all(rankingResults.map(async ranking => {
-                    var rankingObject = new Object();
-                    try {
-                        const userResults = await db.collection('Users').find({ _id: ranking.user }).toArray();
-                        if (albumResults.length > 0) {
-                            rankingObject.username = userResults[0].username;
-                            rankingObject.rankValue = ranking.rankValue;
-                            rankingObject.notes = ranking.notes;
-                            rankingObject.createdAt = ranking.createdAt;
-                            console.log('ALBUM RESULTS:', rankingObject);
-                            return rankingObject;
-                        } else {
-                            ret = { error: "No users found to reviewed this album" + ranking.album };
+                if (rankingResults.length > 0) {
+                    //Gets album info for each album and compiles it to be returned
+                    rankings = await Promise.all(rankingResults.map(async ranking => {
+                        var rankingObject = new Object();
+                        try {
+                            const userResults = await db.collection('Users').find({ _id: ranking.user }).toArray();
+                            if (albumResults.length > 0) {
+                                rankingObject.username = userResults[0].username;
+                                rankingObject.rankValue = ranking.rankValue;
+                                rankingObject.notes = ranking.notes;
+                                rankingObject.createdAt = ranking.createdAt;
+                                console.log('ALBUM RESULTS:', rankingObject);
+                                return rankingObject;
+                            } else {
+                                ret = { error: "No users found to reviewed this album" + ranking.album };
+                                return error;
+                            }
+                        }
+                        catch (error) {
+                            console.error("Error finding users: ", error);
                             return error;
                         }
-                    }
-                    catch (error) {
-                        console.error("Error finding users: ", error);
-                        return error;
-                    }
-                }));
+                    }));
+                } else {
+                    rankings = [];
+                    averageRanking = 0;
+                }
+
+                ret = { id: id, title: albumTitle, artist: artist, releaseDate: releaseDate, genre: genre, coverArtUrl: coverArtUrl, averageRanking: averageRanking, rankings: rankings }
+
             } else {
-                rankings = [];
-                averageRanking = 0;
+                ret = { error: "Album Not Found" };
             }
 
-
-            ret = { id: id, title: albumTitle, artist: artist, releaseDate: releaseDate, genre: genre, coverArtUrl: coverArtUrl, averageRanking: averageRanking, rankings: rankings }
-
-        } else {
-            ret = { error: "Album Not Found" };
+            res.status(200).json(ret);
+        } catch (err) {
+            console.error("API Error in /albums/:id:", err);
+            res.status(400).json({ error: "Invalid album ID" });
         }
-
-        res.status(200).json(ret);
     });
 
     app.post('/api/searchcards', async (req, res, next) => {
@@ -1124,6 +1161,7 @@ exports.setApp = function (app, client) {
                     rankingObject.notes = ranking.notes;
                     rankingObject.createdAt = ranking.createdAt;
                     rankingObject.album = {
+                        _id: albumResults[0]._id,
                         title: albumResults[0].title,
                         artist: albumResults[0].artist,
                         coverArtUrl: albumResults[0].coverArtUrl
@@ -1250,9 +1288,14 @@ exports.setApp = function (app, client) {
             // Refresh token so user isnt logged out
             let refreshedToken = null;
             try {
-                refreshedToken = token.refresh(jwtToken);
+                const refreshResult = token.refresh(jwtToken);
+                if (refreshResult && refreshResult.accessToken) {
+                    refreshedToken = refreshResult.accessToken;
+                } else if (refreshResult && refreshResult.error) {
+                    console.error('Token refresh error:', refreshResult.error);
+                }
             } catch (e) {
-                console.log(e.message);
+                console.log('Token refresh exception:', e.message);
             }
 
             const ret = {
@@ -1480,9 +1523,15 @@ exports.setApp = function (app, client) {
 
         var refreshedToken = null;
         try {
-            refreshedToken = token.refresh(jwtToken);
+            const refreshResult = token.refresh(jwtToken);
+            // refresh() returns { accessToken: "..." } or { error: "..." }
+            if (refreshResult && refreshResult.accessToken) {
+                refreshedToken = refreshResult.accessToken;
+            } else if (refreshResult && refreshResult.error) {
+                console.error('Token refresh error:', refreshResult.error);
+            }
         } catch (e) {
-            console.log(e.message);
+            console.log('Token refresh exception:', e.message);
         }
 
         const ret = { error: error, jwtToken: refreshedToken };

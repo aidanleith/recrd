@@ -156,8 +156,9 @@ export default function UserRankingsPage() {
             <div
               key={index}
               onClick={() => {
-                const urlTitle = ranking.title.replace(/\s+/g, "-").toLowerCase();
-                navigate(`/album/${urlTitle}`);
+                if (ranking._id) {
+                  navigate(`/album/${ranking._id}`);
+                }
               }}
               className="cursor-pointer"
             >
@@ -169,6 +170,7 @@ export default function UserRankingsPage() {
                   createdAt: ranking.createdAt,
                 }}
                 album={{
+                  _id: ranking._id,
                   title: ranking.title,
                   artist: ranking.artist,
                   coverArtUrl: ranking.coverArtUrl,

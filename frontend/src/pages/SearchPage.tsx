@@ -381,8 +381,7 @@ function SearchPage() {
                       album={album as Album}
                       onClick={() => {
                         // Navigate to album detail page
-                        const urlTitle = (album as Album).title.replace(/\s+/g, '-').toLowerCase();
-                        navigate(`/album/${urlTitle}`);
+                        navigate(`/album/${(album as Album)._id}`);
                       }}
                     />
                   </div>

@@ -3,6 +3,7 @@ import RankingCard from "../RankingCard";
 import { useNavigate } from "react-router-dom";
 
 interface Album {
+  _id?: string;
   title: string;
   artist: string;
   coverUrl?: string;
@@ -48,6 +49,7 @@ export const ProfileActivity = ({ activity, avatarUrl, isCurrentUser, username }
                 createdAt: item.createdAt || new Date(),
               }}
               album={{
+                _id: item.album._id,
                 title: item.album.title,
                 artist: item.album.artist,
                 coverArtUrl: item.album.coverArtUrl || item.album.coverUrl,
