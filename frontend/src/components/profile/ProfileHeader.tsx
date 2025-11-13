@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../../components/ui/Button";
+import { Avatar } from "../../components/ui/Avatar";
 
 // 1. Define the props this component expects
 interface ProfileHeaderProps {
@@ -16,6 +17,7 @@ interface ProfileHeaderProps {
   onUnfollowClick?: () => void;
   onFollowersClick?: () => void;
   onFollowingClick?: () => void;
+  leaderboardPosition?: number; // Position in top 50 users (1-50)
 }
 
 // 2. Use React.FC and destructure the props
@@ -33,18 +35,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onUnfollowClick,
   onFollowersClick,
   onFollowingClick,
+  leaderboardPosition,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-8 p-4">
-      {/* --- CONVERTED <Image> TO <img> --- */}
-      <img
-        src={avatarUrl}
-        alt={`${username}'s profile picture`}
-        width={160}
-        height={160}
-        className="rounded-full shadow-lg"
-        // priority prop removed
-      />
+      <Avatar username={username} size={160} />
 
       <div className="flex-grow text-center sm:text-left">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -74,9 +69,16 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         {/* <p className="text-lg text-subtext mt-1">@{username}</p> */}
         <div className="flex gap-10">
           {/* --- FIXED TAILWIND CLASS --- */}
-          <p className="text-base text-subtext">
-            <span className="font-bold">{rankedAlbumsCount}</span> ranked albums
-          </p>
+          <div className="flex flex-col">
+            <p className="text-base text-subtext">
+              <span className="font-bold">{rankedAlbumsCount}</span> ranked albums
+            </p>
+            {leaderboardPosition !== undefined && leaderboardPosition > 0 && (
+              <p className="text-base text-[var(--primary)]">
+                <span className="font-bold">#{leaderboardPosition}</span> on recrd
+              </p>
+            )}
+          </div>
           <p 
             className={`text-base text-subtext ${onFollowersClick ? 'cursor-pointer hover:text-(--primary) transition-colors' : ''}`}
             onClick={onFollowersClick}

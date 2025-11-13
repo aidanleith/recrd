@@ -32,14 +32,21 @@ function SearchPage() {
   const [userResults, setUserResults] = useState<User[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   
-  // Pagination state
+  // Load more state for albums
+  const [albumsLoaded, setAlbumsLoaded] = useState(0);
+  const [hasMoreAlbums, setHasMoreAlbums] = useState(false);
+  const [totalAlbumCount, setTotalAlbumCount] = useState(0);
+  const albumsPerPage = 50;
+  
+  // Pagination state (for users, keep existing pagination)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
   // Sort state
-  const [sortBy, setSortBy] = useState<string>('none');
+  const [sortBy, setSortBy] = useState<string>('most-rankings');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +58,16 @@ function SearchPage() {
     setUserResults([]);
     // Reset to first page when searching
     setCurrentPage(1);
+    setAlbumsLoaded(0);
+    setHasMoreAlbums(false);
+    setTotalAlbumCount(0);
 
     let apiUrl = '';
     let requestBody = {};
 
     if (searchType === 'albums') {
       apiUrl = 'api/searchAlbums';
-      requestBody = { title: query };
+      requestBody = { title: query, limit: albumsPerPage, skip: 0 };
     } else {
       apiUrl = 'api/searchUsers';
       requestBody = { search: query };
@@ -88,7 +98,19 @@ function SearchPage() {
       // 4. Set the correct state based on the search
       if (searchType === 'albums') {
         console.log('Album results with rankings:', data);
-        setAlbumResults(data);
+        // Handle new response format with pagination info
+        if (data.albums) {
+          setAlbumResults(data.albums);
+          setAlbumsLoaded(data.albums.length);
+          setHasMoreAlbums(data.hasMore || false);
+          setTotalAlbumCount(data.totalCount || 0);
+        } else {
+          // Fallback for old format (shouldn't happen, but just in case)
+          setAlbumResults(data);
+          setAlbumsLoaded(data.length);
+          setHasMoreAlbums(false);
+          setTotalAlbumCount(data.length);
+        }
       } else {
         setUserResults(data);
       }
@@ -105,8 +127,57 @@ function SearchPage() {
     }
   };
 
-  // Sort and paginate results
-  const getSortedAndPaginatedResults = () => {
+  const handleLoadMore = async () => {
+    if (!hasMoreAlbums || isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    setError('');
+
+    try {
+      const response = await fetch(buildPath('api/searchAlbums'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          title: query, 
+          limit: albumsPerPage, 
+          skip: albumsLoaded 
+        }),
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      if (data.albums) {
+        // Append new albums to existing results
+        setAlbumResults(prev => [...prev, ...data.albums]);
+        setAlbumsLoaded(prev => prev + data.albums.length);
+        setHasMoreAlbums(data.hasMore || false);
+      }
+
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Sort results (for albums, sort all loaded albums; for users, sort and paginate)
+  const getSortedResults = () => {
     let results = searchType === 'albums' ? [...albumResults] : [...userResults];
     
     // Apply sorting for albums
@@ -174,19 +245,30 @@ function SearchPage() {
       });
     }
     
-    // Apply pagination
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return results.slice(startIndex, endIndex);
+    return results;
+  };
+
+  // For users, apply pagination
+  const getPaginatedUserResults = () => {
+    const results = getSortedResults();
+    if (searchType === 'users') {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return results.slice(startIndex, endIndex);
+    }
+    return results;
   };
 
   const getTotalPages = () => {
-    const results = searchType === 'albums' ? albumResults : userResults;
-    return Math.ceil(results.length / itemsPerPage);
+    if (searchType === 'users') {
+      return Math.ceil(userResults.length / itemsPerPage);
+    }
+    return 1;
   };
 
   const totalPages = getTotalPages();
-  const paginatedResults = getSortedAndPaginatedResults();
+  const sortedResults = getSortedResults();
+  const paginatedUserResults = getPaginatedUserResults();
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
@@ -288,13 +370,11 @@ function SearchPage() {
             Album Results ({albumResults.length} {albumResults.length === 1 ? 'result' : 'results'})
           </h3> */}
           <div className="space-y-1">
-            {paginatedResults.map((album, index) => {
-              // Calculate the actual position in the full results (1-indexed)
-              const position = (currentPage - 1) * itemsPerPage + index + 1;
+            {sortedResults.map((album, index) => {
               return (
                 <div key={album._id} className="flex items-center gap-4">
                   <span className="text-gray-400 text-sm font-medium w-8 text-right">
-                    {position}
+                    {index + 1}
                   </span>
                   <div className="flex-1">
                     <AlbumDisplay
@@ -310,7 +390,17 @@ function SearchPage() {
               );
             })}
           </div>
-          {renderPagination()}
+          {hasMoreAlbums && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-3 rounded-lg bg-(--primary) text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              >
+                {isLoadingMore ? 'Loading...' : `Load More (${albumsLoaded} of ${totalAlbumCount})`}
+              </button>
+            </div>
+          )}
         </div>
       );
     }
@@ -322,7 +412,7 @@ function SearchPage() {
             user results ({userResults.length} {userResults.length === 1 ? 'result' : 'results'})
           </h3>
           <div className="space-y-2">
-            {paginatedResults.map((user) => (
+            {paginatedUserResults.map((user) => (
               <div
                 key={user._id}
                 className="p-3 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
@@ -392,7 +482,6 @@ function SearchPage() {
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value);
-              setCurrentPage(1); // Reset to first page when sorting changes
             }}
             className="h-12 px-4 rounded-lg bg-[#1e1e1e] border border-(--primary) text-white focus:outline-none focus:ring-2 focus:ring-(--primary) cursor-pointer"
           >

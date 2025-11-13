@@ -15,6 +15,7 @@ import RankAlbumPage from './pages/RankAlbumPage';
 import FollowersListPage from './pages/FollowersListPage';
 import FollowingListPage from './pages/FollowingListPage';
 import UserRankingsPage from './pages/UserRankingsPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/profile/:username' element={<ProfilePage />} />
           <Route path='/search' element={<SearchPage />} />
+          <Route path='/leaderboard' element={<LeaderboardPage />} />
           <Route path='/album/:title' element={<AlbumPage />} />
           <Route path='/album/:title/rank' element={<RankAlbumPage />} />
         </Route>

@@ -18,48 +18,77 @@ interface Ranking {
 const HomePage = () => {
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState('');
+  const [hasMore, setHasMore] = useState(false);
+  const rankingsPerPage = 15;
+
+  const fetchRankings = async (skip: number = 0, append: boolean = false) => {
+    if (skip === 0) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    setError('');
+
+    try {
+      const response = await fetch(buildPath(`api/allRankings?limit=${rankingsPerPage}&skip=${skip}`));
+      
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        // Handle new response format with rankings array and hasMore
+        if (data.rankings) {
+          if (append) {
+            setRankings(prev => [...prev, ...data.rankings]);
+          } else {
+            setRankings(data.rankings);
+          }
+          setHasMore(data.hasMore || false);
+        } else {
+          // Fallback for old format (array directly)
+          if (append) {
+            setRankings(prev => [...prev, ...data]);
+          } else {
+            setRankings(data);
+          }
+          setHasMore(false);
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to load rankings');
+      }
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRankings = async () => {
-      setIsLoading(true);
-      setError('');
-
-      try {
-        const response = await fetch(buildPath('api/allRankings'));
-        
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Non-JSON response:', text);
-          throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || `HTTP error! status: ${response.status}`);
-        }
-
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setRankings(data);
-        }
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Failed to load rankings');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRankings();
+    fetchRankings(0, false);
   }, []);
+
+  const handleLoadMore = () => {
+    if (!hasMore || isLoadingMore) return;
+    fetchRankings(rankings.length, true);
+  };
 
   if (isLoading) {
     return (
@@ -81,20 +110,34 @@ const HomePage = () => {
     <div className="flex flex-col gap-6">
       {/* <h1 className="text-3xl font-bold text-white text-start">all rankings</h1> */}
       {rankings.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {rankings.map((ranking, index) => (
-            <RankingCard
-              key={index}
-              ranking={{
-                username: ranking.username,
-                rankValue: ranking.rankValue,
-                notes: ranking.notes,
-                createdAt: ranking.createdAt
-              }}
-              album={ranking.album}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex flex-col gap-3">
+            {rankings.map((ranking, index) => (
+              <RankingCard
+                key={index}
+                ranking={{
+                  username: ranking.username,
+                  rankValue: ranking.rankValue,
+                  notes: ranking.notes,
+                  createdAt: ranking.createdAt
+                }}
+                album={ranking.album}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                variant="primary"
+                size="md"
+              >
+                {isLoadingMore ? 'Loading...' : 'Load More'}
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <p className="text-gray-500 text-center py-8">
           No rankings yet.

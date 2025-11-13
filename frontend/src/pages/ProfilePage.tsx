@@ -37,6 +37,7 @@ export default function ProfilePage() {
   const [isFollowingLoading, setIsFollowingLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [leaderboardPosition, setLeaderboardPosition] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
   const checkFollowingStatus = async (profileUserId: string) => {
@@ -197,6 +198,39 @@ export default function ProfilePage() {
     fetchProfile();
   }, [urlUsername]);
 
+  // Fetch user's leaderboard position if they're in top 50
+  useEffect(() => {
+    const fetchLeaderboardPosition = async () => {
+      if (!profileData) return;
+
+      try {
+        const response = await fetch(buildPath('api/leaderboard/users?limit=50&skip=0'));
+        const data = await response.json();
+
+        if (data.users && Array.isArray(data.users)) {
+          // Find the user's position in the leaderboard
+          const userIndex = data.users.findIndex((user: any) => 
+            String(user._id) === String(profileData.id)
+          );
+
+          if (userIndex !== -1) {
+            // Position is 1-indexed (1st, 2nd, 3rd, etc.)
+            setLeaderboardPosition(userIndex + 1);
+          } else {
+            setLeaderboardPosition(undefined);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching leaderboard position:', err);
+        setLeaderboardPosition(undefined);
+      }
+    };
+
+    if (profileData) {
+      fetchLeaderboardPosition();
+    }
+  }, [profileData]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -355,7 +389,7 @@ export default function ProfilePage() {
       }
     }
 
-    // Use functional update to ensure we have the latest state
+    // Update state optimistically
     setTopThreeAlbums((currentTop3) => {
       // Create new top3 array - first remove the album from any other position if it exists
       let newTop3 = currentTop3.filter((existingAlbum, index) => {
@@ -397,69 +431,126 @@ export default function ProfilePage() {
         }
 
         try {
-          const response = await fetch(buildPath("api/users/profile/top3"), {
-            method: "PATCH",
+          // If replacing an existing position, use PATCH to set the full array
+          // Otherwise, use addTopThree to add a new album
+          const isReplacing = selectedIndex < currentTop3.length && currentTop3[selectedIndex]._id;
+          
+          if (isReplacing) {
+            // Use PATCH to replace at specific position
+            const response = await fetch(buildPath("api/users/profile/top3"), {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                top3: finalTop3.map(album => album._id).filter(id => id),
+              }),
+            });
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+              const text = await response.text();
+              console.error("Non-JSON response:", text);
+              setError(`Server returned non-JSON response. Status: ${response.status}`);
+              return;
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+              setError(data.error);
+              return;
+            }
+
+            // Update token if refreshed
+            if (data.jwtToken) {
+              localStorage.setItem("token_data", data.jwtToken);
+            }
+            setError("");
+            return;
+          }
+          
+          // Adding new album - use addTopThree
+          const addResponse = await fetch(buildPath("api/addTopThree"), {
+            method: "POST",
             headers: {
-              Authorization: `Bearer ${currentToken}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              top3: finalTop3.map(album => album._id).filter(id => id),
+              albumId: albumId,
+              jwtToken: currentToken,
             }),
           });
 
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            const text = await response.text();
-            console.error("Non-JSON response:", text);
-            setError(`Server returned non-JSON response. Status: ${response.status}`);
+          const addContentType = addResponse.headers.get("content-type");
+          if (!addContentType || !addContentType.includes("application/json")) {
+            const text = await addResponse.text();
+            console.error("Non-JSON response from addTopThree:", text);
+            setError(`Server returned non-JSON response. Status: ${addResponse.status}`);
             return;
           }
 
-          const data = await response.json();
-
-          if (data.error) {
-            setError(data.error);
-            // If JWT expired, try to refresh or redirect to login
-            if (data.error.includes("JWT") || data.error.includes("token") || data.error.includes("valid")) {
-              // Don't redirect immediately - try to refresh token first
-              if (data.jwtToken) {
-                localStorage.setItem("token_data", data.jwtToken);
-                // Retry the request with new token
-                const retryResponse = await fetch(buildPath("api/users/profile/top3"), {
-                  method: "PATCH",
-                  headers: {
-                    Authorization: `Bearer ${data.jwtToken}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    top3: finalTop3.map(album => album._id).filter(id => id),
-                  }),
-                });
-                const retryData = await retryResponse.json();
-                if (retryData.error) {
-                  localStorage.removeItem("token_data");
-                  localStorage.removeItem("user_data");
-                  window.location.href = "/login";
-                } else {
-                  // Update token if refreshed
-                  if (retryData.jwtToken) {
-                    localStorage.setItem("token_data", retryData.jwtToken);
-                  }
-                  setError("");
-                }
+          const addData = await addResponse.json();
+          
+          // addTopThree now returns { error: string, jwtToken: string }
+          if (addData.error && addData.error.length > 0) {
+            setError(addData.error);
+            // If JWT error or user not found, redirect to login
+            if (addData.error.includes("JWT") || addData.error.includes("token") || addData.error.includes("valid") || addData.error.includes("User not found")) {
+              if (addData.jwtToken) {
+                localStorage.setItem("token_data", addData.jwtToken);
               } else {
                 localStorage.removeItem("token_data");
                 localStorage.removeItem("user_data");
                 window.location.href = "/login";
               }
             }
-          } else {
+            return;
+          }
+          
+          // Update token if refreshed
+          if (addData.jwtToken) {
+            localStorage.setItem("token_data", addData.jwtToken);
+          }
+
+          // Success - refresh the profile to get updated top3
+          const profileResponse = await fetch(buildPath("api/users/profile"), {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          const profileContentType = profileResponse.headers.get("content-type");
+          if (!profileContentType || !profileContentType.includes("application/json")) {
+            const text = await profileResponse.text();
+            console.error("Non-JSON response from profile:", text);
+            setError(`Server returned non-JSON response. Status: ${profileResponse.status}`);
+            return;
+          }
+
+          const profileDataResponse = await profileResponse.json();
+          
+          if (profileDataResponse.error) {
+            setError(profileDataResponse.error);
+          } else if (profileDataResponse.topThree) {
+            // Update state with fresh data from server
+            setTopThreeAlbums(profileDataResponse.topThree.map((a: any) => ({
+              _id: a._id,
+              title: a.title,
+              artist: a.artist,
+              coverArtUrl: a.coverArtUrl,
+            })));
+            
             // Update token if refreshed
-            if (data.jwtToken) {
-              localStorage.setItem("token_data", data.jwtToken);
+            if (profileDataResponse.jwtToken) {
+              localStorage.setItem("token_data", profileDataResponse.jwtToken);
             }
-            setError(""); // Clear any previous errors
+            setError("");
+          } else {
+            setError("");
           }
         } catch (err) {
           if (err instanceof Error) {
@@ -488,7 +579,7 @@ export default function ProfilePage() {
       <ProfileHeader
         username={profileData.username}
         bio={""} // API doesn't return bio yet
-        avatarUrl={"https://i.pravatar.cc/150?img=5"} // Placeholder
+        avatarUrl={""} // Not used anymore, Avatar component generates it from username
         isCurrentUser={isCurrentUser}
         rankedAlbumsCount={profileData.numRankings}
         followerCount={profileData.followerCount}
@@ -499,18 +590,22 @@ export default function ProfilePage() {
         onUnfollowClick={handleUnfollow}
         onFollowersClick={() => navigate(urlUsername ? `/profile/${urlUsername}/followers` : "/profile/followers")}
         onFollowingClick={() => navigate(urlUsername ? `/profile/${urlUsername}/following` : "/profile/following")}
+        leaderboardPosition={leaderboardPosition}
       />
 
       <div className="">
         <div className="flex items-center gap-10 mt-6 mb-4">
           <h2 className="text-2xl font-bold text-white">favorite albums</h2>
+          <div className="flex gap-2">
           <Button
-            onClick={() => navigate(urlUsername ? `/profile/${urlUsername}/rankings` : "/profile/rankings")}
+              onClick={() => navigate(urlUsername ? `/profile/${urlUsername}/rankings` : "/profile/rankings")}
             variant="primary"
             size="sm"
           >
             view all rankings
           </Button>
+
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-4 w-full">
           {Array.from({ length: 3 }).map((_, index) => {
@@ -585,7 +680,7 @@ export default function ProfilePage() {
           favoriteTrack: "", // Not in API response
         }))}
         isCurrentUser={isCurrentUser}
-        avatarUrl={"https://i.pravatar.cc/150?img=5"}
+        avatarUrl={""} // Not used anymore, but keeping for compatibility
         username={profileData.username}
       />
     </div>

@@ -7,6 +7,7 @@ import { IconHome } from "../../../public/icons/IconHome";
 import { IconAddCircle } from "../../../public/icons/IconAddCircle";
 import { IconList } from "../../../public/icons/IconList";
 import { IconSearch } from "../../../public/icons/IconSearch";
+import { IconTrophy } from "../../../public/icons/IconTrophy";
 import { buildPath } from '../Path';
 
 export const Navbar = () => {
@@ -73,6 +74,37 @@ export const Navbar = () => {
     }
   };
 
+  const handleRankingsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentUsername) {
+      navigate(`/profile/${currentUsername}/rankings`);
+    } else {
+      // Fallback: try to get username first
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          if (user.id) {
+            fetch(buildPath(`api/userById/${user.id}`))
+              .then(res => res.json())
+              .then(data => {
+                if (data.username) {
+                  navigate(`/profile/${data.username}/rankings`);
+                } else {
+                  navigate('/profile/rankings');
+                }
+              })
+              .catch(() => navigate('/profile/rankings'));
+          }
+        } catch {
+          navigate('/profile/rankings');
+        }
+      } else {
+        navigate('/profile/rankings');
+      }
+    }
+  };
+
   return (
     // 3. Fixed border-b-1 to border-b
     <nav className="shadow-sm bg-background border-b border-[var(--border)]/10">
@@ -89,7 +121,7 @@ export const Navbar = () => {
 
             {/* Buttons */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
+              {/* <Link
                 to="/add" // 4. Changed href -> to
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   isActive('/add')
@@ -98,7 +130,7 @@ export const Navbar = () => {
                 }`}
               >
                 <IconAddCircle className="w-8 h-8" />
-              </Link>
+              </Link> */}
               <Link
                 to="/home" // 4. Changed href -> to
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
@@ -109,16 +141,16 @@ export const Navbar = () => {
               >
                 <IconHome className="w-7 h-7" />
               </Link>
-              <Link
-                to="/list" // 4. Changed href -> to
+              <button
+                onClick={handleRankingsClick}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                  isActive('/list')
+                  pathname.includes('/rankings')
                     ? 'border-primary text-(--primary)' // 5. Fixed
                     : 'border-transparent text-gray-500 hover:border-primary hover:text-(--primary)' // 5. Fixed
                 }`}
               >
                 <IconList className="w-7 h-7" />
-              </Link>
+              </button>
               <Link
                 to="/search" // 4. Changed href -> to
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
@@ -129,10 +161,20 @@ export const Navbar = () => {
               >
                 <IconSearch className="w-7 h-7" />
               </Link>
+              <Link
+                to="/leaderboard" // 4. Changed href -> to
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  isActive('/leaderboard')
+                    ? 'border-primary text-(--primary)' // 5. Fixed
+                    : 'border-transparent text-gray-500 hover:border-primary hover:text-(--primary)' // 5. Fixed
+                }`}
+              >
+                <IconTrophy className='w-7 h-7'/>
+              </Link>
               <button
                 onClick={handleProfileClick}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                  pathname.startsWith('/profile')
+                  pathname.startsWith('/profile') && !pathname.includes('/rankings') && !pathname.includes('/followers') && !pathname.includes('/following')
                     ? 'border-primary text-(--primary)' // 5. Fixed
                     : 'border-transparent text-gray-500 hover:border-primary hover:text-(--primary)' // 5. Fixed
                 }`}

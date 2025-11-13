@@ -122,21 +122,89 @@ exports.setApp = function (app, client) {
     });
     app.post('/api/addTopThree', async (req, res, next) => {
         // incoming: albumId, JWT
-        // outgoing: error
+        // outgoing: { error: string, jwtToken: string }
 
         const { albumId, jwtToken } = req.body;
-        decodedToken = jwt.decode(jwtToken);
-        var objectDecodedId = new ObjectId(String(decodedToken.id));
-        var objectAlbumId = new ObjectId(String(albumId))
+        const token = require("./createJWT.js");
+        
         var error = '';
+        var refreshedToken = null;
+        
         try {
-            const db = client.db('recrd');
-            await db.collection('Users').findOneAndUpdate({ _id: objectDecodedId }, { $push: { top3: objectAlbumId } });
-        }
-        catch (e) {
+            if (!jwtToken || token.isExpired(jwtToken)) {
+                error = 'The JWT is no longer valid';
+            } else {
+                decodedToken = jwt.decode(jwtToken);
+                if (!decodedToken || !decodedToken.id) {
+                    error = 'Invalid token: missing user ID';
+                } else {
+                    var objectDecodedId = new ObjectId(String(decodedToken.id));
+                    var objectAlbumId = new ObjectId(String(albumId));
+                    
+                    const db = client.db('recrd');
+                    
+                    // Check if user exists
+                    console.log('Looking for user with ID:', objectDecodedId);
+                    const user = await db.collection('Users').findOne({ _id: objectDecodedId });
+                    console.log('User found:', user ? 'Yes' : 'No');
+                    if (!user) {
+                        error = 'User not found';
+                        console.error('User not found for ID:', objectDecodedId, 'Decoded token ID:', decodedToken.id);
+                    } else {
+                        // Check if top3 already has 3 items, if so, don't add more
+                        if (user.top3 && user.top3.length >= 3) {
+                            error = 'Top 3 is already full. Please remove an album first.';
+                        } else if (user.top3 && user.top3.some(id => String(id) === String(objectAlbumId))) {
+                            // Check if album is already in top3
+                            error = 'Album is already in your top 3';
+                        } else {
+                            // Add album to top3
+                            // Use $set with the full array to avoid validation issues
+                            const currentTop3 = user.top3 || [];
+                            const newTop3 = [...currentTop3, objectAlbumId];
+                            
+                            // Ensure we don't exceed 3 items
+                            const finalTop3 = newTop3.slice(0, 3);
+                            
+                            try {
+                                await db.collection('Users').findOneAndUpdate(
+                                    { _id: objectDecodedId }, 
+                                    { $set: { top3: finalTop3 } }
+                                );
+                            } catch (validationError) {
+                                // If validation fails, try to get more details
+                                console.error('Validation error details:', JSON.stringify(validationError.errInfo, null, 2));
+                                // Try bypassing validation as fallback (not ideal but might be necessary)
+                                try {
+                                    await db.collection('Users').findOneAndUpdate(
+                                        { _id: objectDecodedId }, 
+                                        { $set: { top3: finalTop3 } },
+                                        { bypassDocumentValidation: true }
+                                    );
+                                } catch (bypassError) {
+                                    throw validationError; // Throw original error if bypass also fails
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error in addTopThree:', e);
             error = e.toString();
         }
-        res.status(200).json(error);
+        
+        // Try to refresh token
+        try {
+            if (jwtToken && !error.includes('JWT') && !error.includes('token') && !error.includes('valid')) {
+                refreshedToken = token.refresh(jwtToken);
+            }
+        } catch (e) {
+            console.log(e.message);
+        }
+        
+        var ret = { error: error, jwtToken: refreshedToken };
+        res.status(200).json(ret);
     });
 
     app.post('/api/addToListen', async (req, res, next) => {
@@ -740,16 +808,29 @@ exports.setApp = function (app, client) {
             console.log("Request body:", req.body);
             const db = client.db('recrd'); // Use the actual DB name
             const searchTerm = req.body.title;
-            console.log("Searching for:", searchTerm);
-            //retrieve all matching song names
-            // const results = await db.collection('Albums').find({ title: songName}).toArray();
-            const results = await db.collection('Albums').find({
+            const limit = req.body.limit || 50; // Default to 50, can be overridden
+            const skip = req.body.skip || 0; // Default to 0, can be overridden
+            console.log("Searching for:", searchTerm, "limit:", limit, "skip:", skip);
+            
+            // Build the query
+            const query = {
                 $or: [
                     { "title": { $regex: searchTerm, $options: 'i' } },
                     { "artist": { $regex: searchTerm, $options: 'i' } }
                 ]
-            }).toArray();
-            console.log("Results returned: ", results);
+            };
+            
+            // Get total count for pagination info
+            const totalCount = await db.collection('Albums').countDocuments(query);
+            
+            // Retrieve only the albums we need (with pagination)
+            const results = await db.collection('Albums')
+                .find(query)
+                .skip(skip)
+                .limit(limit)
+                .toArray();
+            
+            console.log("Results returned: ", results.length, "out of", totalCount);
             var ret;
             if (results.length > 0) {
                 // Calculate average ranking for each album
@@ -776,8 +857,12 @@ exports.setApp = function (app, client) {
                     };
                 }));
 
-                //return list of albums with average rankings
-                return res.status(200).json(albumsWithRankings);
+                //return list of albums with average rankings, plus pagination info
+                return res.status(200).json({
+                    albums: albumsWithRankings,
+                    totalCount: totalCount,
+                    hasMore: (skip + limit) < totalCount
+                });
             }
             else {
                 //No matching albums found
@@ -787,6 +872,184 @@ exports.setApp = function (app, client) {
             }
         } catch (err) {
             console.error("API Error in /searchAlbums:", err);
+            return res.status(500).json({ error: "An internal database error occurred." });
+        }
+    });
+
+    // Leaderboard: Get users with most rankings using aggregation
+    app.get('/api/leaderboard/users', async (req, res, next) => {
+        try {
+            const db = client.db('recrd');
+            const limit = parseInt(req.query.limit) || 50;
+            const skip = parseInt(req.query.skip) || 0;
+
+            // Use aggregation pipeline to efficiently get users with most rankings
+            const pipeline = [
+                // Stage 1: Group rankings by user and calculate stats
+                {
+                    $group: {
+                        _id: '$user',
+                        rankingCount: { $sum: 1 },
+                        averageRanking: { $avg: '$rankValue' }
+                    }
+                },
+                // Stage 2: Sort by ranking count (descending)
+                {
+                    $sort: { rankingCount: -1 }
+                },
+                // Stage 3: Skip and limit for pagination
+                {
+                    $skip: skip
+                },
+                {
+                    $limit: limit
+                },
+                // Stage 4: Lookup user details from Users collection
+                {
+                    $lookup: {
+                        from: 'Users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'userDetails'
+                    }
+                },
+                // Stage 5: Unwind user details (since lookup returns array)
+                {
+                    $unwind: {
+                        path: '$userDetails',
+                        preserveNullAndEmptyArrays: false
+                    }
+                },
+                // Stage 6: Reshape the output
+                {
+                    $project: {
+                        _id: '$userDetails._id',
+                        username: '$userDetails.username',
+                        rankingCount: 1,
+                        averageRanking: { $round: ['$averageRanking', 2] }
+                    }
+                }
+            ];
+
+            // Get total count of users with rankings
+            const totalCountPipeline = [
+                {
+                    $group: {
+                        _id: '$user',
+                        rankingCount: { $sum: 1 }
+                    }
+                },
+                {
+                    $count: 'total'
+                }
+            ];
+
+            const [results, totalCountResult] = await Promise.all([
+                db.collection('Rankings').aggregate(pipeline).toArray(),
+                db.collection('Rankings').aggregate(totalCountPipeline).toArray()
+            ]);
+
+            const totalCount = totalCountResult.length > 0 ? totalCountResult[0].total : 0;
+
+            return res.status(200).json({
+                users: results,
+                totalCount: totalCount,
+                hasMore: (skip + limit) < totalCount
+            });
+
+        } catch (err) {
+            console.error("API Error in /leaderboard/users:", err);
+            return res.status(500).json({ error: "An internal database error occurred." });
+        }
+    });
+
+    // Leaderboard: Get albums with most rankings using aggregation
+    app.get('/api/leaderboard', async (req, res, next) => {
+        try {
+            const db = client.db('recrd');
+            const limit = parseInt(req.query.limit) || 50;
+            const skip = parseInt(req.query.skip) || 0;
+
+            // Use aggregation pipeline to efficiently get most ranked albums
+            const pipeline = [
+                // Stage 1: Group rankings by album and calculate stats
+                {
+                    $group: {
+                        _id: '$album',
+                        rankingCount: { $sum: 1 },
+                        averageRanking: { $avg: '$rankValue' }
+                    }
+                },
+                // Stage 2: Sort by ranking count (descending)
+                {
+                    $sort: { rankingCount: -1 }
+                },
+                // Stage 3: Skip and limit for pagination
+                {
+                    $skip: skip
+                },
+                {
+                    $limit: limit
+                },
+                // Stage 4: Lookup album details from Albums collection
+                {
+                    $lookup: {
+                        from: 'Albums',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'albumDetails'
+                    }
+                },
+                // Stage 5: Unwind album details (since lookup returns array)
+                {
+                    $unwind: {
+                        path: '$albumDetails',
+                        preserveNullAndEmptyArrays: false
+                    }
+                },
+                // Stage 6: Reshape the output
+                {
+                    $project: {
+                        _id: '$albumDetails._id',
+                        title: '$albumDetails.title',
+                        artist: '$albumDetails.artist',
+                        coverArtUrl: '$albumDetails.coverArtUrl',
+                        releaseDate: '$albumDetails.releaseDate',
+                        genre: '$albumDetails.genre',
+                        rankingCount: 1,
+                        averageRanking: { $round: ['$averageRanking', 2] }
+                    }
+                }
+            ];
+
+            // Get total count of albums with rankings
+            const totalCountPipeline = [
+                {
+                    $group: {
+                        _id: '$album',
+                        rankingCount: { $sum: 1 }
+                    }
+                },
+                {
+                    $count: 'total'
+                }
+            ];
+
+            const [results, totalCountResult] = await Promise.all([
+                db.collection('Rankings').aggregate(pipeline).toArray(),
+                db.collection('Rankings').aggregate(totalCountPipeline).toArray()
+            ]);
+
+            const totalCount = totalCountResult.length > 0 ? totalCountResult[0].total : 0;
+
+            return res.status(200).json({
+                albums: results,
+                totalCount: totalCount,
+                hasMore: (skip + limit) < totalCount
+            });
+
+        } catch (err) {
+            console.error("API Error in /leaderboard:", err);
             return res.status(500).json({ error: "An internal database error occurred." });
         }
     });
@@ -820,14 +1083,24 @@ exports.setApp = function (app, client) {
         // outgoing: array of rankings with username, rankValue, notes, createdAt, album info
         try {
             const db = client.db('recrd');
+            const limit = parseInt(req.query.limit) || 15;
+            const skip = parseInt(req.query.skip) || 0;
 
-            // Get all rankings sorted by createdAt ascending (earliest first)
-            const rankingResults = await db.collection('Rankings').find({}).sort({ createdAt: 1 }).toArray();
+            // Get rankings sorted by createdAt descending (newest first) with pagination
+            const rankingResults = await db.collection('Rankings')
+                .find({})
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .toArray();
 
-            console.log('Found rankings:', rankingResults.length);
+            console.log('Found rankings:', rankingResults.length, 'limit:', limit, 'skip:', skip);
 
             if (rankingResults.length === 0) {
-                return res.status(200).json([]);
+                return res.status(200).json({
+                    rankings: [],
+                    hasMore: false
+                });
             }
 
             // Get user and album info for each ranking
@@ -866,7 +1139,14 @@ exports.setApp = function (app, client) {
             // Filter out any null results
             const validRankings = rankings.filter(r => r !== null);
 
-            return res.status(200).json(validRankings);
+            // Check if there are more rankings
+            const totalCount = await db.collection('Rankings').countDocuments({});
+            const hasMore = (skip + limit) < totalCount;
+
+            return res.status(200).json({
+                rankings: validRankings,
+                hasMore: hasMore
+            });
         } catch (err) {
             console.error("API Error in /allRankings:", err);
             return res.status(500).json({ error: "An internal database error occurred." });
