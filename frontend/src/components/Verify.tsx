@@ -60,7 +60,7 @@ function Verify() {
             } catch {}
 
             setMessage('Verified! Redirecting...');
-            navigate('/cards');
+            navigate('/home');
         } catch (error: any) {
             setMessage(error.toString());
         }
