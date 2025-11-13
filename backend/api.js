@@ -355,7 +355,12 @@ exports.setApp = function (app, client) {
             } else {
                 const passwordMatch = await bcrypt.compare(trimmedPassword, hashedPassword);
                 console.log('Password match result:', passwordMatch);
+                //passwords match
                 if (passwordMatch) {
+                    //final check - is user verified?
+                    if (results[0].isVerified === false){
+                        return res.status(200).json({error: "You must verify your account before logging in."})
+                    }
                     id = results[0]._id;
                     email = results[0].email;
                     try {
