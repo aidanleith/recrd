@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { buildPath } from "../components/Path";
 import { retrieveToken } from "../tokenStorage";
 import { useNavigate, useParams } from "react-router-dom";

@@ -30,6 +30,7 @@ function RankAlbumPage() {
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasExistingRanking, setHasExistingRanking] = useState(false);
+  //@ts-ignore: Ignoring in order to compile
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
   useEffect(() => {

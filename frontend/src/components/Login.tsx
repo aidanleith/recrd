@@ -5,6 +5,8 @@ import { jwtDecode } from 'jwt-decode';
 import { Button } from "./ui/Button"
 import { Link } from 'react-router-dom';
 
+type customJwtPayload = { id: string, email: string };
+
 
 function Login() {
     const [message, setMessage] = useState('');
@@ -26,7 +28,7 @@ function Login() {
 
             const { accessToken } = res;
             storeToken(res);
-            const decoded = jwtDecode(accessToken);
+            const decoded = jwtDecode<customJwtPayload>(accessToken);
             try {
                 var ud = decoded;
                 var userId = ud.id;

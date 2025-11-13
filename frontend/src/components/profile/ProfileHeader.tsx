@@ -21,9 +21,11 @@ interface ProfileHeaderProps {
 }
 
 // 2. Use React.FC and destructure the props
+
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   username,
   bio,
+  // @ts-ignore: avatarUrl is going to be implemented later
   avatarUrl,
   rankedAlbumsCount,
   followerCount,

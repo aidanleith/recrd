@@ -404,7 +404,9 @@ export default function ProfilePage() {
       
       // Create new top3 array - first remove the album from any other position if it exists
       let newTop3 = safeCurrentTop3.filter((existingAlbum, index) => {
-        const existingId = String(existingAlbum?._id || existingAlbum?.albumId || '');
+        /* removed || existingAlbum?.albumId from this statement,
+         albumId doesnt exist in existingAlbum so it would never run*/
+        const existingId = String(existingAlbum?._id || '');
         const newId = String(albumId || '');
         // Keep the album if:
         // 1. It's at the selectedIndex (we'll replace it)
@@ -467,7 +469,9 @@ export default function ProfilePage() {
           if (isReplacing) {
             // Use PATCH to replace at specific position
             // Ensure we have valid album IDs
-            const top3Ids = finalTop3.map(album => album?._id || album?.albumId).filter(id => id && id !== '');
+            /* removed || existingAlbum?.albumId from this statement,
+            albumId doesnt exist in existingAlbum so it would never run*/
+            const top3Ids = finalTop3.map(album => album?._id).filter(id => id && id !== '');
             
             // Safety check: if we somehow only have one album but should have more, log a warning
             if (top3Ids.length === 1 && safeCurrentTop3.length > 1) {

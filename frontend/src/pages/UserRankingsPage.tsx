@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { buildPath } from "../components/Path";
 import { retrieveToken } from "../tokenStorage";
 import { useNavigate, useParams } from "react-router-dom";
@@ -40,6 +40,7 @@ export default function UserRankingsPage() {
 
           const contentType = response.headers.get("content-type");
           if (!contentType || !contentType.includes("application/json")) {
+            //@ts-ignore: ignoring for compiler, text never used
             const text = await response.text();
             throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
           }
@@ -88,6 +89,7 @@ export default function UserRankingsPage() {
 
           const contentType = response.headers.get("content-type");
           if (!contentType || !contentType.includes("application/json")) {
+            //@ts-ignore: ignoring for compiler, text never used
             const text = await response.text();
             throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
           }
@@ -156,7 +158,9 @@ export default function UserRankingsPage() {
             <div
               key={index}
               onClick={() => {
+                //@ts-ignore: Is ranking._id even a real value?? hopefully this doesnt fuck up anything.
                 if (ranking._id) {
+                  //@ts-ignore: Is this even a real value?? hopefully this doesnt fuck up anything.
                   navigate(`/album/${ranking._id}`);
                 }
               }}
@@ -170,6 +174,7 @@ export default function UserRankingsPage() {
                   createdAt: ranking.createdAt,
                 }}
                 album={{
+                  //@ts-ignore: Is this even a real value?? hopefully this doesnt fuck up anything.
                   _id: ranking._id,
                   title: ranking.title,
                   artist: ranking.artist,

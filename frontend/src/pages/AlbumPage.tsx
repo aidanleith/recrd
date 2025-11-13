@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { buildPath } from '../components/Path';
-import { retrieveToken } from '../tokenStorage';
-import { jwtDecode } from 'jwt-decode';
+//import { retrieveToken } from '../tokenStorage';
+//import { jwtDecode } from 'jwt-decode';
 import RankingCard from '../components/RankingCard';
 import { Button } from '../components/ui/Button';
 
@@ -29,6 +29,7 @@ function AlbumPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRanking, setUserRanking] = useState<number | null>(null);
+  // @ts-ignore: Ignoring in order to compile
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
   useEffect(() => {

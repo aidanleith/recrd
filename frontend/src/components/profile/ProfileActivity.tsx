@@ -1,6 +1,6 @@
-import React from "react";
+//import React from "react";
 import RankingCard from "../RankingCard";
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 
 interface Album {
   _id?: string;
@@ -26,8 +26,9 @@ export interface ProfileActivityProps {
   username: string;
 }
 
+// @ts-ignore: avatarUrl is going to be implemented later
 export const ProfileActivity = ({ activity, avatarUrl, isCurrentUser, username }: ProfileActivityProps) => {
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   return (
     <section className="w-full text-left max-w-6xl mx-auto">
