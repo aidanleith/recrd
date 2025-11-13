@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IconUser } from "../../../public/icons/IconUser";
 import { IconHome } from "../../../public/icons/IconHome";
-import { IconAddCircle } from "../../../public/icons/IconAddCircle";
 import { IconList } from "../../../public/icons/IconList";
 import { IconSearch } from "../../../public/icons/IconSearch";
 import { IconTrophy } from "../../../public/icons/IconTrophy";
@@ -113,7 +112,7 @@ export const Navbar = () => {
           <div className="flex justify-between w-full">
             <div className="flex">
               <Link to="/" className="flex items-center">
-                <span className="text-3xl font-bold text-(--primary)">
+                <span className="ml-4 sm:ml-0 text-3xl font-bold text-(--primary)">
                   recrd
                 </span>
               </Link>
@@ -187,7 +186,7 @@ export const Navbar = () => {
           <div className="flex items-center">
             <button
               type="button"
-              className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+              className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-[#2a2a2a] hover:text-white transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
@@ -228,25 +227,81 @@ export const Navbar = () => {
       {/* Mobile menu */}
       {isMobileMenuOpen && (
         <div className="sm:hidden">
-          <div className="space-y-1 pb-3 pt-2">
-            <Link
-              to="/features" // 4. Changed href -> to
-              className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+          <div className="space-y-1 pb-3 pt-2 px-4">
+            <button
+              onClick={() => {
+                handleRankingsClick({ preventDefault: () => {} } as React.MouseEvent);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`block w-full text-left border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                pathname.includes('/rankings')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
             >
-              Features
+              <div className="flex items-center gap-2">
+                <IconList className="w-5 h-5" />
+                <span>Rankings</span>
+              </div>
+            </button>
+            <Link
+              to="/home"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                isActive('/home')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <IconHome className="w-5 h-5" />
+                <span>Home</span>
+              </div>
             </Link>
             <Link
-              to="/pricing" // 4. Changed href -> to
-              className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+              to="/search"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                isActive('/search')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
             >
-              Pricing
+              <div className="flex items-center gap-2">
+                <IconSearch className="w-5 h-5" />
+                <span>Search</span>
+              </div>
             </Link>
             <Link
-              to="/about" // 4. Changed href -> to
-              className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+              to="/leaderboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                isActive('/leaderboard')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
             >
-              About
+              <div className="flex items-center gap-2">
+                <IconTrophy className="w-5 h-5" />
+                <span>Leaderboard</span>
+              </div>
             </Link>
+            <button
+              onClick={(e) => {
+                handleProfileClick(e);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`block w-full text-left border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                pathname.startsWith('/profile') && !pathname.includes('/rankings') && !pathname.includes('/followers') && !pathname.includes('/following')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <IconUser className="w-5 h-5" />
+                <span>Profile</span>
+              </div>
+            </button>
           </div>
         </div>
       )}

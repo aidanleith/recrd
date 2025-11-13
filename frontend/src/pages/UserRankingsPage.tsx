@@ -146,8 +146,8 @@ export default function UserRankingsPage() {
   const displayUsername = profileUsername || (currentUser ? "you" : "");
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold text-white text-start">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white text-start">
         {profileUsername ? `${profileUsername}'s rankings` : "all rankings"}
       </h1>
       {rankings.length > 0 ? (

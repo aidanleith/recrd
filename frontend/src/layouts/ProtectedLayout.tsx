@@ -23,7 +23,7 @@ export const ProtectedLayout = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center">
       <Navbar />
-      <main className="flex-1 mx-auto w-5xl my-6">
+      <main className="flex-1 mx-auto max-w-5xl w-full px-4 sm:px-6 my-6">
         <Outlet />
       </main>
     </div>

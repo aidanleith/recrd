@@ -49,64 +49,67 @@ function RankingCard({ ranking, album }: RankingCardProps) {
   return (
     <div className="flex flex-col gap-3 p-3 rounded-lg group">
       {/* Header: [name] ranked a new album */}
-      <div className="flex items-center gap-6">
-        <div className='flex gap-2'>
+      <div className="flex flex-row items-center justify-between gap-5 sm:gap-6">
+        <div className='flex flex-wrap gap-2 items-center'>
         <span 
-          className="text-white text-xl font-semibold cursor-pointer hover:text-(--primary) transition-colors"
+          className="text-white text-base sm:text-xl font-semibold cursor-pointer hover:text-(--primary) transition-colors"
           onClick={handleUsernameClick}
         >
           {ranking.username}
         </span>
-        <span className="text-gray-400 text-xl">ranked an album</span>
+        <span className="text-gray-400 text-base sm:text-xl">ranked an album</span>
         </div>
 
         {/* Ranking */}
-        <span className={`${getRankingBackgroundClass(ranking.rankValue)} text-white font-bold text-xl px-3 py-1 rounded-lg inline-block`}>
+        <span className={`${getRankingBackgroundClass(ranking.rankValue)} text-white font-bold text-lg sm:text-xl px-2 sm:px-3 py-1 rounded-lg inline-block md:hidden w-16 sm:w-20 text-center ml-auto flex-shrink-0`}>
           {ranking.rankValue}/10
         </span>
       </div>
 
 
       {/* Album info row - cover on left, title/artist on right */}
-      <div className="flex flex-row gap-4 items-center">
+      <div className="flex flex-row gap-3 sm:gap-4 items-start sm:items-center">
         {/* Album cover - Left */}
         <div className="flex-shrink-0 cursor-pointer" onClick={handleAlbumClick}>
           {album.coverArtUrl ? (
             <img
               src={album.coverArtUrl}
               alt={`${album.title} cover`}
-              className="w-24 h-24 rounded-md object-cover shadow-lg"
+              className="w-16 h-16 sm:w-24 sm:h-24 rounded-md object-cover shadow-lg"
             />
           ) : (
-            <div className="w-30 h-30 rounded-md bg-[#2a2a2a] flex items-center justify-center">
+            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-md bg-[#2a2a2a] flex items-center justify-center">
               <span className="text-gray-500 text-xs">No Cover</span>
             </div>
           )}
         </div>
 
         {/* Album info - Right */}
-        <div className="flex items-start min-w-0 flex-1 justify-between">
-          <div className='flex items-start flex-col cursor-pointer' onClick={handleAlbumClick}>
-            <h3 className="text-white font-bold text-xl truncate hover:text-(--primary) transition-colors">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start min-w-0 flex-1 justify-between gap-2 sm:gap-0">
+          <div className='flex items-start flex-col cursor-pointer min-w-0 flex-1' onClick={handleAlbumClick}>
+            <h3 className="text-white font-bold text-start text-base sm:text-xl truncate w-full hover:text-(--primary) transition-colors">
               {album.title}
             </h3>
-            <p className="text-gray-400 text-xl truncate mt-1">
+            <p className="text-gray-400 text-sm text-start sm:text-xl truncate mt-1 w-full">
               {album.artist}
             </p>
           </div>
 
-          <div className='flex flex-col items-end'>
+          <div className='flex flex-col items-start sm:items-end gap-1'>
             {/* Comment/Notes */}
             {ranking.notes && ranking.notes.trim() && (
-              <div className="mt-2">
-                <p className="text-gray-300 italic">
+              <div className="mt-0 sm:mt-2">
+                <p className="text-gray-300 italic text-sm sm:text-base">
                   "{ranking.notes}"
                 </p>
               </div>
             )}
 
             {/* Date */}
-            <div className="text-gray-500 text-xs mt-1">
+            <div className="text-gray-500 flex flex-col gap-2 text-xs mt-0 sm:mt-1 items-end">
+              <span className={`${getRankingBackgroundClass(ranking.rankValue)} text-white font-bold text-lg sm:text-xl px-2 sm:px-3 py-1 rounded-lg md:inline-block hidden w-16 sm:w-20 text-center flex-shrink-0`}>
+                {ranking.rankValue}/10
+              </span>
               {formatDate(ranking.createdAt)}
             </div>
           </div>

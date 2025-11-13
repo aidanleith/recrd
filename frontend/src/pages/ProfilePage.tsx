@@ -729,8 +729,8 @@ export default function ProfilePage() {
       />
 
       <div className="">
-        <div className="flex items-center gap-10 mt-6 mb-4">
-          <h2 className="text-2xl font-bold text-white">favorite albums</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-10 mt-6 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">favorite albums</h2>
           <div className="flex gap-2">
           <Button
               onClick={() => navigate(urlUsername ? `/profile/${urlUsername}/rankings` : "/profile/rankings")}
@@ -742,7 +742,7 @@ export default function ProfilePage() {
 
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 w-full">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full">
           {Array.from({ length: 3 }).map((_, index) => {
             const album = topThreeAlbums[index];
             const isEmpty = !album;

@@ -115,25 +115,25 @@ export default function FollowersListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl font-bold text-white">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white">
         {profileUsername ? `${profileUsername}'s followers` : "Followers"}
       </h1>
       {followers.length > 0 ? (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:gap-3">
           {followers.map((follower) => (
             <div
               key={follower._id}
-              className="flex items-center gap-4 p-4 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+              className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
               onClick={() => {
                 navigate(`/profile/${follower.username}`);
               }}
             >
-              <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
-                <span className="text-white font-semibold text-lg">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold text-base sm:text-lg">
                   {follower.username.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="text-white text-xl font-semibold">{follower.username}</span>
+              <span className="text-white text-base sm:text-xl font-semibold truncate">{follower.username}</span>
             </div>
           ))}
         </div>

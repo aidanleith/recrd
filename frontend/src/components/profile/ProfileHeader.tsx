@@ -38,12 +38,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   leaderboardPosition,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-8 p-4">
+    <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-8 p-2 sm:p-4">
       <Avatar username={username} size={160} />
 
-      <div className="flex-grow text-center sm:text-left">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-bold text-white">{username}</h1>
+      <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">{username}</h1>
 
           {/* 3. Conditionally render a button based on props */}
           {isCurrentUser ? (
@@ -67,7 +67,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </div>
 
         {/* <p className="text-lg text-subtext mt-1">@{username}</p> */}
-        <div className="flex gap-10">
+        <div className="flex flex-wrap gap-4 sm:gap-10 justify-center sm:justify-start mt-2">
           {/* --- FIXED TAILWIND CLASS --- */}
           <div className="flex flex-col">
             <p className="text-base text-subtext">

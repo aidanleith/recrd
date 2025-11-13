@@ -140,35 +140,35 @@ function AlbumPage() {
   const albumTitle = albumData?.title || 'Unknown Album';
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className='flex gap-6 justify-between'>
-        <div className='flex gap-6'>
-        <div className="flex justify-center">
+    <div className="flex flex-col gap-6 sm:gap-8">
+      <div className='flex flex-col sm:flex-row gap-4 sm:gap-6 sm:justify-between'>
+        <div className='flex flex-col sm:flex-row gap-4 sm:gap-6'>
+        <div className="flex justify-center sm:justify-start">
           {albumData.coverArtUrl ? (
             <img
               src={albumData.coverArtUrl}
               alt={`${albumTitle} cover`}
-              className="w-60 h-60 rounded-lg object-cover shadow-2xl"
+              className="w-48 h-48 sm:w-60 sm:h-60 rounded-lg object-cover shadow-2xl"
             />
           ) : (
-            <div className="w-60 h-60 rounded-lg bg-[#2a2a2a] flex items-center justify-center">
-              <span className="text-gray-500 text-lg">No Cover</span>
+            <div className="w-48 h-48 sm:w-60 sm:h-60 rounded-lg bg-[#2a2a2a] flex items-center justify-center">
+              <span className="text-gray-500 text-sm sm:text-lg">No Cover</span>
             </div>
           )}
         </div>
 
         {/* Album Info */}
-        <div className='flex flex-row justify-between'>
-          <div className='flex flex-col justify-between'>
-            <div className="flex flex-col items-start">
-              <h1 className="text-4xl font-bold text-white text-start">
+        <div className='flex flex-col sm:flex-row sm:justify-between flex-1'>
+          <div className='flex flex-col justify-between gap-4'>
+            <div className="flex flex-col items-start sm:items-start">
+              <h1 className="text-2xl sm:text-4xl font-bold text-white text-start">
                 {albumData.title || albumTitle}
               </h1>
-              <p className="text-2xl text-gray-400 text-start">
+              <p className="text-xl sm:text-2xl text-gray-400 text-start">
                 {albumData.artist}
               </p>
               {albumData.releaseDate && (
-                <p className="text-lg text-gray-500 text-start">
+                <p className="text-base sm:text-lg text-gray-500 text-start">
                   {formatDate(albumData.releaseDate)}
                 </p>
               )}
@@ -188,27 +188,27 @@ function AlbumPage() {
           </div>
         </div>
           </div>
-          <div className="flex flex-col justify-between gap-8 items-end">
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-gray-400 text-xl">your ranking</span>
+          <div className="flex flex-row sm:flex-col justify-between sm:justify-between gap-4 sm:gap-8 items-center sm:items-end">
+            <div className="flex flex-col items-center sm:items-end gap-2">
+              <span className="text-gray-400 text-base sm:text-xl">your ranking</span>
               {userRanking !== null ? (
-                <span className={`${getRankingBackgroundClass(userRanking)} text-white font-bold text-2xl px-4 py-2 rounded-lg`}>
+                <span className={`${getRankingBackgroundClass(userRanking)} text-white font-bold text-xl sm:text-2xl px-3 sm:px-4 py-1 sm:py-2 rounded-lg`}>
                   {userRanking}/10
                 </span>
               ) : (
-                <span className="text-gray-500 font-bold text-2xl">
+                <span className="text-gray-500 font-bold text-xl sm:text-2xl">
                   —
                 </span>
               )}
             </div>
-            <div className="flex flex-col items-end text-end gap-2">
-              <span className="text-gray-400 text-xl">global ranking</span>
+            <div className="flex flex-col items-center sm:items-end text-center sm:text-end gap-2">
+              <span className="text-gray-400 text-base sm:text-xl">global ranking</span>
               {albumData.averageRanking > 0 ? (
-                <span className={`${getRankingBackgroundClass(albumData.averageRanking)} text-white font-bold text-2xl px-4 py-2 rounded-lg`}>
+                <span className={`${getRankingBackgroundClass(albumData.averageRanking)} text-white font-bold text-xl sm:text-2xl px-3 sm:px-4 py-1 sm:py-2 rounded-lg`}>
                   {albumData.averageRanking.toFixed(1)}/10
                 </span>
               ) : (
-                <span className="text-gray-500 font-bold text-2xl">
+                <span className="text-gray-500 font-bold text-xl sm:text-2xl">
                   —
                 </span>
               )}
@@ -218,7 +218,7 @@ function AlbumPage() {
 
       {/* All Rankings */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-3xl font-bold text-white text-start">all rankings</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white text-start">all rankings</h2>
         {albumData.rankings && albumData.rankings.length > 0 ? (
           <div className="flex flex-col gap-3">
             {albumData.rankings.map((ranking, index) => (

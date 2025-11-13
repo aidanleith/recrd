@@ -109,19 +109,19 @@ function LeaderboardPage() {
   }, [leaderboardType]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-4xl font-bold text-white text-start">leaderboard</h2>
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <h2 className="text-2xl sm:text-4xl font-bold text-white text-start">leaderboard</h2>
       {/* <p className="text-gray-400">
         {leaderboardType === 'albums' 
           ? 'Albums ranked by number of rankings. Showing the most popular albums on the platform.'
           : 'Users ranked by number of rankings. Showing the most active users on the platform.'}
       </p> */}
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-2 sm:gap-3 mb-4">
         <button
           type="button"
           onClick={() => setLeaderboardType('albums')}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
             leaderboardType === 'albums'
               ? 'bg-yellow-400 text-black'
               : 'bg-transparent text-white hover:bg-[#2a2a2a]'
@@ -132,7 +132,7 @@ function LeaderboardPage() {
         <button
           type="button"
           onClick={() => setLeaderboardType('users')}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
             leaderboardType === 'users'
               ? 'bg-yellow-400 text-black'
               : 'bg-transparent text-white hover:bg-[#2a2a2a]'
@@ -169,7 +169,7 @@ function LeaderboardPage() {
                       />
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="text-white text-sm font-semibold">
+                      <span className="text-white text-xs sm:text-sm font-semibold">
                         {album.rankingCount} {album.rankingCount === 1 ? 'ranking' : 'rankings'}
                       </span>
                       {album.averageRanking !== undefined && album.averageRanking > 0 && (
@@ -199,10 +199,10 @@ function LeaderboardPage() {
                       {index + 1}
                     </span>
                     <div className="flex-1">
-                      <p className="text-white font-semibold text-lg">{user.username}</p>
+                      <p className="text-white font-semibold text-base sm:text-lg">{user.username}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="text-white text-sm font-semibold">
+                      <span className="text-white text-xs sm:text-sm font-semibold">
                         {user.rankingCount} {user.rankingCount === 1 ? 'ranking' : 'rankings'}
                       </span>
                       {user.averageRanking !== undefined && user.averageRanking > 0 && (

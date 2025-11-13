@@ -180,25 +180,25 @@ function RankAlbumPage() {
   const albumTitle = albumData.title || 'Unknown Album';
 
   return (
-    <div className="flex flex-col gap-8 max-w-2xl mx-auto">
+    <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto w-full">
       {/* Album Info Header */}
-      <div className="flex flex-row gap-6 items-center">
+      <div className="flex flex-row gap-4 sm:gap-6 items-center">
         {albumData.coverArtUrl ? (
           <img
             src={albumData.coverArtUrl}
             alt={`${albumTitle} cover`}
-            className="w-32 h-32 rounded-lg object-cover shadow-lg"
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover shadow-lg flex-shrink-0"
           />
         ) : (
-          <div className="w-32 h-32 rounded-lg bg-[#2a2a2a] flex items-center justify-center">
-            <span className="text-gray-500 text-sm">No Cover</span>
+          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+            <span className="text-gray-500 text-xs sm:text-sm">No Cover</span>
           </div>
         )}
-        <div className="flex flex-col items-start">
-          <h1 className="text-3xl font-bold text-white">
+        <div className="flex flex-col items-start min-w-0">
+          <h1 className="text-xl sm:text-3xl font-bold text-white truncate w-full">
             {albumTitle}
           </h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-lg sm:text-xl text-gray-400 truncate w-full">
             {albumData.artist}
           </p>
         </div>
@@ -235,7 +235,7 @@ function RankAlbumPage() {
             className="px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg text-white focus:outline-none focus:border-[--primary]"
             required
           />
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
               <Button
                 key={num}
@@ -243,7 +243,7 @@ function RankAlbumPage() {
                 onClick={() => setRankValue(num)}
                 variant={rankValue === num ? "tertiary" : "secondary"}
                 size="sm"
-                className="min-w-[3rem]"
+                className="min-w-[2.5rem] sm:min-w-[3rem]"
               >
                 {num}
               </Button>
@@ -274,13 +274,13 @@ function RankAlbumPage() {
         )}
 
         {/* Submit Button */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Button
             type="submit"
             disabled={isSubmitting}
             variant="tertiary"
             size="lg"
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             {isSubmitting ? 'Submitting...' : hasExistingRanking ? 'update ranking' : 'submit ranking'}
           </Button>
@@ -289,7 +289,7 @@ function RankAlbumPage() {
             onClick={() => {
               navigate(`/album/${albumData.id}`);
             }}
-            className="px-6 py-3 bg-[#2a2a2a] text-white font-semibold rounded-lg hover:bg-[#3a3a3a] transition-colors"
+            className="px-6 py-3 bg-[#2a2a2a] text-white font-semibold rounded-lg hover:bg-[#3a3a3a] transition-colors w-full sm:w-auto"
           >
             cancel
           </button>
