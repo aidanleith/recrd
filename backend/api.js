@@ -396,6 +396,26 @@ exports.setApp = function (app, client) {
         // outgoing: error
 
         const { username, email, password } = req.body;
+
+        //validation checks if username or email already exists
+        try {
+            const db = client.db('recrd');
+            
+            //check if username already exists
+            const existingUsername = await db.collection('Users').findOne({ username: username });
+            if (existingUsername) {
+                return res.status(400).json({ error: 'Username already exists. Please choose a different username.' });
+            }
+
+            //check if email already exists
+            const existingEmail = await db.collection('Users').findOne({ email: email });
+            if (existingEmail) {
+                return res.status(400).json({ error: 'Email already registered. Please use a different email or log in.' });
+            }
+
+        } catch (e) {
+            return res.status(500).json({ error: 'Database error. Please try again.' });
+        }
         //Hash the password to be put in the database
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
