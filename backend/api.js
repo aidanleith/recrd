@@ -424,8 +424,13 @@ exports.setApp = function (app, client) {
         //Create 6 Digit OTP and then hash it for the database
         const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const hashedOtp = await bcrypt.hash(otp, saltRounds);
-        sendVerificationEmail(email, otp);
 
+        try {
+            error = await sendVerificationEmail(email, otp);
+        }
+        catch (e) {
+            res.status(200).json(error, e);
+        }
 
         const newUser = {
             username: String(username),
@@ -554,7 +559,14 @@ exports.setApp = function (app, client) {
             }
             console.log(resetToken, hashedResetToken);
 
-            sendPasswordResetEmail(email, resetToken, req);
+            try {
+                error = await sendPasswordResetEmail(email, resetToken, req);
+                res.status(200).json(error, e);
+            }
+            catch (e) {
+                res.status(200).json(error, e);
+            }
+            
 
         }
         else {
@@ -576,9 +588,11 @@ exports.setApp = function (app, client) {
             .send(msg)
             .then(() => {
                 console.log('Email sent')
+                return 'Email sent';
             })
             .catch((error) => {
                 console.error(error)
+                return error;
             })
     };
 
