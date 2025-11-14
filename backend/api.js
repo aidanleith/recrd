@@ -5,6 +5,8 @@ const crypto = require('crypto');
 
 //Install these in the backend folder if you dont have them
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_EMAIL_API_KEY);
 const bcrypt = require('bcrypt');
 
 //Used for Hashing
@@ -14,7 +16,7 @@ const otpExpirationTime = 30 * 60000;
 const passwordExpirationTime = 10 * 60000;
 
 //Used for password link in email, change to domain name / ip when on server
-const app_name = 'localhost:5173'
+const app_name = 'ntw234.xyz'
 //const app_name = '45.55.136.167'
 
 exports.setApp = function (app, client) {
@@ -131,11 +133,11 @@ exports.setApp = function (app, client) {
 
         const { albumId, jwtToken } = req.body;
         const token = require("./createJWT.js");
-        
+
         var error = '';
         var refreshedToken = null;
         var operationSuccess = false;
-        
+
         try {
             if (!jwtToken || token.isExpired(jwtToken)) {
                 error = 'The JWT is no longer valid';
@@ -146,9 +148,9 @@ exports.setApp = function (app, client) {
                 } else {
                     var objectDecodedId = new ObjectId(String(decodedToken.id));
                     var objectAlbumId = new ObjectId(String(albumId));
-                    
+
                     const db = client.db('recrd');
-                    
+
                     // Check if user exists
                     console.log('Looking for user with ID:', objectDecodedId);
                     const user = await db.collection('Users').findOne({ _id: objectDecodedId });
@@ -168,13 +170,13 @@ exports.setApp = function (app, client) {
                             // Use $set with the full array to avoid validation issues
                             const currentTop3 = user.top3 || [];
                             const newTop3 = [...currentTop3, objectAlbumId];
-                            
+
                             // Ensure we don't exceed 3 items
                             const finalTop3 = newTop3.slice(0, 3);
-                            
+
                             try {
                                 await db.collection('Users').findOneAndUpdate(
-                                    { _id: objectDecodedId }, 
+                                    { _id: objectDecodedId },
                                     { $set: { top3: finalTop3 } }
                                 );
                                 // Mark operation as successful
@@ -185,7 +187,7 @@ exports.setApp = function (app, client) {
                                 // Try bypassing validation as fallback (not ideal but might be necessary)
                                 try {
                                     await db.collection('Users').findOneAndUpdate(
-                                        { _id: objectDecodedId }, 
+                                        { _id: objectDecodedId },
                                         { $set: { top3: finalTop3 } },
                                         { bypassDocumentValidation: true }
                                     );
@@ -207,12 +209,12 @@ exports.setApp = function (app, client) {
                 error = e.toString();
             }
         }
-        
+
         // If operation succeeded, clear any error that might have been set
         if (operationSuccess) {
             error = '';
         }
-        
+
         // Try to refresh token - always try if we have a token, even if there was an error
         try {
             if (jwtToken) {
@@ -235,7 +237,7 @@ exports.setApp = function (app, client) {
                 error = 'Token refresh exception: ' + e.message;
             }
         }
-        
+
         var ret = { error: error, jwtToken: refreshedToken };
         res.status(200).json(ret);
     });
@@ -422,8 +424,9 @@ exports.setApp = function (app, client) {
         //Create 6 Digit OTP and then hash it for the database
         const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const hashedOtp = await bcrypt.hash(otp, saltRounds);
-
         sendVerificationEmail(email, otp);
+
+
         const newUser = {
             username: String(username),
             email: String(email),
@@ -452,25 +455,22 @@ exports.setApp = function (app, client) {
         res.status(200).json(error);
     });
 
-    const sendVerificationEmail = async (email, otp) => {
-        const transporter = nodemailer.createTransport({
-            host: "smtp.sendgrid.net",
-            port: 587,
-            secure: false, // true for 465, false for other ports
-            auth: {
-                user: "apikey",
-                pass: process.env.SENDGRID_SMTP_RELAY,
-            },
-        });
-
-        const info = await transporter.sendMail({
-            from: 'recrd@hamsterrunner.com',
+        const sendVerificationEmail = async (email, otp, req) => {
+        const msg = {
             to: email,
-            subject: "Verifiy Your RECRD Account",
+            from: 'recrd@hamsterrunner.com',
+            subject: 'Verifiy Your RECRD Account',
             text: "Your verification code is: " + otp + "."
                 + "\nYour code will expire in " + otpExpirationTime / 60000 + " minutes.", // plain‑text body
-        });
-
+        }
+        sgMail
+            .send(msg)
+            .then(() => {
+                console.log('Email sent')
+            })
+            .catch((error) => {
+                console.error(error)
+            })
     };
 
     app.post('/api/verifyOTP', async (req, res, next) => {
@@ -565,24 +565,21 @@ exports.setApp = function (app, client) {
     });
 
     const sendPasswordResetEmail = async (email, resetToken, req) => {
-        const transporter = nodemailer.createTransport({
-            host: "smtp.sendgrid.net",
-            port: 587,
-            secure: false, // true for 465, false for other ports
-            auth: {
-                user: "apikey",
-                pass: process.env.SENDGRID_SMTP_RELAY,
-            },
-        });
-
-        const info = await transporter.sendMail({
-            from: 'recrd@hamsterrunner.com',
+        const msg = {
             to: email,
-            subject: "Reset Your RECRD Password",
+            from: 'recrd@hamsterrunner.com',
+            subject: 'Reset Your RECRD Password',
             text: `Your password reset link is: http://${app_name}/reset-password/${resetToken}`
                 + "\nYour link will expire in " + passwordExpirationTime / 60000 + " minutes.", // plain‑text body
-        });
-
+        }
+        sgMail
+            .send(msg)
+            .then(() => {
+                console.log('Email sent')
+            })
+            .catch((error) => {
+                console.error(error)
+            })
     };
 
     app.patch('/api/resetPassword/:token', async (req, res, next) => {
@@ -647,7 +644,7 @@ exports.setApp = function (app, client) {
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ username: username }).toArray();
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
@@ -752,20 +749,20 @@ exports.setApp = function (app, client) {
 
         console.log('Searching for album with ID:', albumId);
         const db = client.db('recrd'); // Use the actual DB name
-        
+
         try {
             // Convert string ID to ObjectId
             const objectId = new ObjectId(albumId);
             const albumResults = await db.collection('Albums').find({ _id: objectId }).toArray();
             console.log('DB QUERY RESULTS:', albumResults);
-            
+
             var error = '';
             var ret;
             var id = -1;
             var artist, genre, coverArtUrl;
             var releaseDate;
             var averageRanking;
-            
+
             if (albumResults.length > 0) {
                 id = albumResults[0]._id;
                 const albumTitle = albumResults[0].title;
@@ -873,7 +870,7 @@ exports.setApp = function (app, client) {
             const limit = req.body.limit || 50; // Default to 50, can be overridden
             const skip = req.body.skip || 0; // Default to 0, can be overridden
             console.log("Searching for:", searchTerm, "limit:", limit, "skip:", skip);
-            
+
             // Build the query
             const query = {
                 $or: [
@@ -881,17 +878,17 @@ exports.setApp = function (app, client) {
                     { "artist": { $regex: searchTerm, $options: 'i' } }
                 ]
             };
-            
+
             // Get total count for pagination info
             const totalCount = await db.collection('Albums').countDocuments(query);
-            
+
             // Retrieve only the albums we need (with pagination)
             const results = await db.collection('Albums')
                 .find(query)
                 .skip(skip)
                 .limit(limit)
                 .toArray();
-            
+
             console.log("Results returned: ", results.length, "out of", totalCount);
             var ret;
             if (results.length > 0) {
@@ -1237,19 +1234,19 @@ exports.setApp = function (app, client) {
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         console.log('Decoded token:', decodedToken);
-        
+
         if (!decodedToken || !decodedToken.id) {
             return res.status(401).json({ error: 'Invalid token: missing user ID' });
         }
-        
+
         const userId = new ObjectId(String(decodedToken.id));
         console.log('Looking for user with ID:', userId);
-        
+
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
             console.log('User results count:', userResults.length);
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
@@ -1289,7 +1286,7 @@ exports.setApp = function (app, client) {
 
             // Filter out any null values from failed album lookups
             const validAlbums = albums.filter(album => album !== null);
-            
+
             // Get album details for top3
             const topThreeAlbums = [];
             if (topThree && topThree.length > 0) {
@@ -1309,7 +1306,7 @@ exports.setApp = function (app, client) {
                     }
                 }
             }
-            
+
             // Refresh token so user isnt logged out
             let refreshedToken = null;
             try {
@@ -1447,18 +1444,18 @@ exports.setApp = function (app, client) {
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ username: username }).toArray();
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
-            
+
             const user = userResults[0];
             const followerIds = user.followers;
             //look up each follower's user info
             const followers = await db.collection('Users').find({
                 _id: { $in: followerIds }  //find all users whose _id is in the followerIds array
             }).toArray();
-            
+
             //returns id and username
             const followersList = followers.map(follower => ({
                 _id: follower._id,
@@ -1466,7 +1463,7 @@ exports.setApp = function (app, client) {
             }));
             res.status(200).json(followersList);
         }
-        catch (e){
+        catch (e) {
             console.error("Error fetching followers:", e);
             res.status(500).json({ error: "An error occurred fetching the followers" });
         }
@@ -1481,18 +1478,18 @@ exports.setApp = function (app, client) {
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ username: username }).toArray();
-            
+
             if (userResults.length === 0) {
                 return res.status(404).json({ error: "User Not Found" });
             }
-            
+
             const user = userResults[0];
             const followingIds = user.following;
             //look up each following's user info
             const followings = await db.collection('Users').find({
                 _id: { $in: followingIds }  //find all users whose _id is in the followingIds array
             }).toArray();
-            
+
             //returns id and username
             const followingList = followings.map(following => ({
                 _id: following._id,
@@ -1500,7 +1497,7 @@ exports.setApp = function (app, client) {
             }));
             res.status(200).json(followingList);
         }
-        catch (e){
+        catch (e) {
             console.error("Error fetching following:", e);
             res.status(500).json({ error: "An error occurred fetching the following" });
         }
@@ -1529,14 +1526,14 @@ exports.setApp = function (app, client) {
 
         try {
             const db = client.db('recrd');
-            
+
             // Validate top3 array (should be max 3 items, all valid ObjectIds)
             if (!Array.isArray(top3) || top3.length > 3) {
                 error = 'top3 must be an array with maximum 3 items';
             } else {
                 // Convert all to ObjectIds to validate
                 const validTop3 = top3.filter(id => id !== null && id !== undefined).map(id => new ObjectId(String(id)));
-                
+
                 await db.collection('Users').findOneAndUpdate(
                     { _id: userId },
                     { $set: { top3: validTop3 } }
