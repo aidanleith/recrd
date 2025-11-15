@@ -157,7 +157,7 @@ const HomePage = () => {
           size="md"
           className="w-full"
         >
-          [DEBUG] Logout
+          Logout
         </Button>
       </div>
     </div>

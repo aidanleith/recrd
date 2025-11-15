@@ -407,16 +407,24 @@ function SearchPage() {
     if (searchType === 'users' && userResults.length > 0) {
       return (
         <div className="mt-6">
-          <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">
+          {/* <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">
             user results ({userResults.length} {userResults.length === 1 ? 'result' : 'results'})
-          </h3>
-          <div className="space-y-2">
+          </h3> */}
+          <div className="flex flex-col gap-2 sm:gap-3">
             {paginatedUserResults.map((user) => (
               <div
                 key={user._id}
-                className="p-3 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+                className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+                onClick={() => {
+                  navigate(`/profile/${(user as User).username}`);
+                }}
               >
-                <p className="text-white font-semibold">{(user as User).username}</p>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-semibold text-base sm:text-lg">
+                    {(user as User).username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-white text-base sm:text-xl font-semibold truncate">{(user as User).username}</span>
               </div>
             ))}
           </div>

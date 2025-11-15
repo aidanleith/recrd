@@ -6,7 +6,15 @@ const crypto = require('crypto');
 //Install these in the backend folder if you dont have them
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey(process.env.SENDGRID_EMAIL_API_KEY);
+
+// Check if SendGrid API key is configured
+if (!process.env.SENDGRID_EMAIL_API_KEY) {
+    console.error('WARNING: SENDGRID_EMAIL_API_KEY is not set in environment variables!');
+    console.error('Please create a .env file in the backend folder with: SENDGRID_EMAIL_API_KEY=your_api_key_here');
+} else {
+    sgMail.setApiKey(process.env.SENDGRID_EMAIL_API_KEY);
+}
+
 const bcrypt = require('bcrypt');
 
 //Used for Hashing
@@ -461,6 +469,13 @@ exports.setApp = function (app, client) {
     });
 
         const sendVerificationEmail = async (email, otp, req) => {
+        // Check if API key is configured
+        if (!process.env.SENDGRID_EMAIL_API_KEY) {
+            const errorMsg = 'SendGrid API key is not configured. Please set SENDGRID_EMAIL_API_KEY in your .env file.';
+            console.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+
         const msg = {
             to: email,
             from: 'recrd@hamsterrunner.com',
@@ -468,14 +483,18 @@ exports.setApp = function (app, client) {
             text: "Your verification code is: " + otp + "."
                 + "\nYour code will expire in " + otpExpirationTime / 60000 + " minutes.", // plain‑text body
         }
-        sgMail
-            .send(msg)
-            .then(() => {
-                console.log('Email sent')
-            })
-            .catch((error) => {
-                console.error(error)
-            })
+        try {
+            await sgMail.send(msg);
+            console.log('Email sent successfully to:', email);
+        } catch (error) {
+            console.error('Error sending email:', error);
+            // Provide more helpful error messages
+            if (error.response && error.response.body && error.response.body.errors) {
+                const sendgridErrors = error.response.body.errors;
+                console.error('SendGrid errors:', JSON.stringify(sendgridErrors, null, 2));
+            }
+            throw error; // Re-throw so calling code can handle it
+        }
     };
 
     app.post('/api/verifyOTP', async (req, res, next) => {
@@ -527,6 +546,70 @@ exports.setApp = function (app, client) {
         }
         else {
             ret = { error: "User already verified or does not exist" };
+        }
+        res.status(200).json(ret);
+    });
+
+    app.post('/api/resendVerification', async (req, res, next) => {
+        // incoming: username
+        // outgoing: error
+        const { username } = req.body;
+        const db = client.db('recrd');
+        const results = await db.collection('Users').find({ username: username }).toArray();
+        var ret = { error: '' };
+
+        if (results.length > 0) {
+            // Check if user is already verified
+            if (results[0].isVerified === true) {
+                ret = { error: 'User is already verified' };
+            } else {
+                // Generate new OTP
+                const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+                const hashedOtp = await bcrypt.hash(otp, saltRounds);
+                const email = results[0].email;
+
+                // Update OTP in database - use updateOne to ensure update happens
+                try {
+                    const updateResult = await db.collection('Users').updateOne(
+                        { username: username },
+                        {
+                            $set: {
+                                otp: String(hashedOtp),
+                                otpCreatedAt: Date.now(),
+                                otpExpiresAt: Date.now() + otpExpirationTime
+                            }
+                        }
+                    );
+
+                    console.log(`OTP update result for ${username}:`, {
+                        matchedCount: updateResult.matchedCount,
+                        modifiedCount: updateResult.modifiedCount,
+                        otpGenerated: otp
+                    });
+
+                    // Verify the update actually happened
+                    if (updateResult.modifiedCount === 0 && updateResult.matchedCount === 0) {
+                        console.error(`Failed to update OTP for user ${username}`);
+                        ret = { error: 'Failed to update OTP in database' };
+                    } else {
+                        // Send verification email only after database update is confirmed
+                        console.log(`Sending verification email to ${email} with OTP: ${otp}`);
+                        try {
+                            await sendVerificationEmail(email, otp);
+                            console.log(`Verification email sent successfully to ${email}`);
+                            ret = { error: '' }; // Success
+                        } catch (e) {
+                            console.error(`Failed to send verification email to ${email}:`, e);
+                            ret = { error: 'Failed to send verification email' };
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Error updating OTP for ${username}:`, e);
+                    ret = { error: e.message };
+                }
+            }
+        } else {
+            ret = { error: 'User not found' };
         }
         res.status(200).json(ret);
     });
@@ -1053,9 +1136,12 @@ exports.setApp = function (app, client) {
                         averageRanking: { $avg: '$rankValue' }
                     }
                 },
-                // Stage 2: Sort by ranking count (descending)
+                // Stage 2: Sort by ranking count (descending), then by average ranking (descending) as tiebreaker
                 {
-                    $sort: { rankingCount: -1 }
+                    $sort: { 
+                        rankingCount: -1,
+                        averageRanking: -1 
+                    }
                 },
                 // Stage 3: Skip and limit for pagination
                 {

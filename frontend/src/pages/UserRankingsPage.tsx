@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { buildPath } from "../components/Path";
 import { retrieveToken } from "../tokenStorage";
 import { useNavigate, useParams } from "react-router-dom";
-import RankingCard from "../components/RankingCard";
+import AlbumDisplay from "../components/AlbumDisplay";
 
 interface Ranking {
+  _id?: string;
   title: string;
   artist: string;
   coverArtUrl?: string;
@@ -155,33 +156,21 @@ export default function UserRankingsPage() {
       {rankings.length > 0 ? (
         <div className="flex flex-col gap-3">
           {rankings.map((ranking, index) => (
-            <div
+            <AlbumDisplay
               key={index}
+              album={{
+                _id: ranking._id || '',
+                title: ranking.title,
+                artist: ranking.artist,
+                coverArtUrl: ranking.coverArtUrl,
+                averageRanking: ranking.rankValue,
+              }}
               onClick={() => {
-                //@ts-ignore: Is ranking._id even a real value?? hopefully this doesnt fuck up anything.
                 if (ranking._id) {
-                  //@ts-ignore: Is this even a real value?? hopefully this doesnt fuck up anything.
                   navigate(`/album/${ranking._id}`);
                 }
               }}
-              className="cursor-pointer"
-            >
-              <RankingCard
-                ranking={{
-                  username: displayUsername,
-                  rankValue: ranking.rankValue,
-                  notes: ranking.notes,
-                  createdAt: ranking.createdAt,
-                }}
-                album={{
-                  //@ts-ignore: Is this even a real value?? hopefully this doesnt fuck up anything.
-                  _id: ranking._id,
-                  title: ranking.title,
-                  artist: ranking.artist,
-                  coverArtUrl: ranking.coverArtUrl,
-                }}
-              />
-            </div>
+            />
           ))}
         </div>
       ) : (

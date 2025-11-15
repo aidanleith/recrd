@@ -190,7 +190,7 @@ function AlbumPage() {
         </div>
           </div>
           <div className="flex flex-row sm:flex-col justify-between sm:justify-between gap-4 sm:gap-8 items-center sm:items-end">
-            <div className="flex flex-col items-center sm:items-end gap-2">
+            <div className="flex flex-col items-center sm:text-end sm:items-end gap-2">
               <span className="text-gray-400 text-base sm:text-xl">your ranking</span>
               {userRanking !== null ? (
                 <span className={`${getRankingBackgroundClass(userRanking)} text-white font-bold text-xl sm:text-2xl px-3 sm:px-4 py-1 sm:py-2 rounded-lg`}>

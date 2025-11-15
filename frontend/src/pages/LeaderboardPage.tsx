@@ -111,11 +111,6 @@ function LeaderboardPage() {
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
       <h2 className="text-2xl sm:text-4xl font-bold text-white text-start">leaderboard</h2>
-      {/* <p className="text-gray-400">
-        {leaderboardType === 'albums' 
-          ? 'Albums ranked by number of rankings. Showing the most popular albums on the platform.'
-          : 'Users ranked by number of rankings. Showing the most active users on the platform.'}
-      </p> */}
 
       <div className="flex gap-2 sm:gap-3 mb-4">
         <button
@@ -157,7 +152,7 @@ function LeaderboardPage() {
               {albums.map((album, index) => {
                 return (
                   <div key={album._id} className="flex items-center gap-4">
-                    <span className="text-gray-400 text-sm font-medium w-8 text-right">
+                    <span className="text-gray-400 text-sm font-medium sm:w-8 text-right">
                       {index + 1}
                     </span>
                     <div className="flex-1">
@@ -168,7 +163,7 @@ function LeaderboardPage() {
                         }}
                       />
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    {/* <div className="flex flex-col items-end gap-1">
                       <span className="text-white text-xs sm:text-sm font-semibold">
                         {album.rankingCount} {album.rankingCount === 1 ? 'ranking' : 'rankings'}
                       </span>
@@ -177,7 +172,7 @@ function LeaderboardPage() {
                           Avg: {album.averageRanking.toFixed(2)}
                         </span>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 );
               })}
@@ -195,7 +190,7 @@ function LeaderboardPage() {
                     className="flex items-center gap-4 p-3 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer"
                     onClick={() => navigate(`/profile/${user.username}`)}
                   >
-                    <span className="text-gray-400 text-sm font-medium w-8 text-right">
+                    <span className="text-gray-400 text-sm font-medium sm:w-8 text-right">
                       {index + 1}
                     </span>
                     <div className="flex-1">

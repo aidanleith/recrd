@@ -1,4 +1,4 @@
-//import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface AlbumDisplayProps {
   album: {
@@ -9,16 +9,37 @@ interface AlbumDisplayProps {
     releaseDate?: string;
     genre?: string;
     averageRanking?: number;
+    rankingCount?: number;
   };
   onClick?: () => void;
 }
 
 function AlbumDisplay({ album, onClick }: AlbumDisplayProps) {
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 640); // 640px is the 'sm' breakpoint in Tailwind
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   const getRankingBackgroundClass = (ranking: number): string => {
     if (ranking >= 8) return 'bg-green-500';  // Great (8-10)
     if (ranking >= 5) return 'bg-yellow-500'; // Average (5-7)
     return 'bg-red-500';                      // Poor (1-4)
   };
+
+  const truncateTitle = (title: string, maxLength: number): string => {
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + '...';
+  };
+
+  const displayTitle = isSmallScreen ? truncateTitle(album.title, 25) : album.title;
+  const displayArtist = isSmallScreen ? truncateTitle(album.artist, 25) : album.artist;
 
   return (
     <div
@@ -43,10 +64,10 @@ function AlbumDisplay({ album, onClick }: AlbumDisplayProps) {
       {/* Album Info - Middle */}
       <div className="flex flex-col items-start text-start min-w-0 flex-1">
         <h3 className="text-white font-bold text-base sm:text-xl truncate w-full group-hover:text-(--primary) transition-colors">
-          {album.title}
+          {displayTitle}
         </h3>
         <p className="text-gray-400 text-sm sm:text-xl truncate mt-1 w-full">
-          {album.artist}
+          {displayArtist}
         </p>
       </div>
 
@@ -58,7 +79,9 @@ function AlbumDisplay({ album, onClick }: AlbumDisplayProps) {
               {album.averageRanking.toFixed(1)}
             </div>
             <div className="text-gray-400 text-xs mt-1 hidden sm:block">
-              global ranking
+              {album.rankingCount !== undefined && album.rankingCount > 0 
+                ? `${album.rankingCount} ${album.rankingCount === 1 ? 'ranking' : 'rankings'}`
+                : 'global ranking'}
             </div>
           </>
         ) : (
