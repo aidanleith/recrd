@@ -81,7 +81,7 @@ function AlbumDisplay({ album, onClick }: AlbumDisplayProps) {
             <div className="text-gray-400 text-xs mt-1 hidden sm:block">
               {album.rankingCount !== undefined && album.rankingCount > 0 
                 ? `${album.rankingCount} ${album.rankingCount === 1 ? 'ranking' : 'rankings'}`
-                : 'global ranking'}
+                : ''}
             </div>
           </>
         ) : (
