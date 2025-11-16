@@ -25,13 +25,16 @@ async function fetchAlbums(){
             "Adele", "Sam Smith", "Shawn Mendes", "Camila Cabello",
             "Charli XCX", "Troye Sivan", "Gracie Abrams", "Conan Gray",
             "Lorde", "RAYE", "Zara Larsson", "Bebe Rexha", 
-            "Lauv", "Tate McRae"*/
+            "Lauv", "Tate McRae"
             "Rihanna", "Sia", "Halsey", "Madison Beer", "Ava Max",
             "Kim Petras", "Meghan Trainor", "Anne-Marie", "Rita Ora",
             "Ellie Goulding", "Jessie J", "Demi Lovato", "Jonas Brothers",
             "OneRepublic", "Maroon 5", "Charlie Puth", "Khalid",
             "Alessia Cara", "Julia Michaels", "Fletcher", "Maisie Peters",
             "Holly Humberstone", "Reneé Rapp", "Chappell Roan", "Leah Kate"
+            "Frank Sinatra", "Elton John", "Michael Jackson", "Madonna", "Paul McCartney",
+            "Billy Joel", "Bee Gees", "Dean Martin", "Elvis Presley"*/
+
         ];
 
         const rapArtists = [
@@ -41,13 +44,13 @@ async function fetchAlbums(){
             "XXXTentacion", "Polo G", "Roddy Ricch", "DaBaby", "Megan Thee Stallion",
             "Cardi B", "Nicki Minaj", "SZA",
             "A$AP Rocky", "Lil Durk", "Ice Spice", "Gunna",
-            "Yeat", "Don Toliver", "Cordae", "Coi Leray", "Central Cee"*/
+            "Yeat", "Don Toliver", "Cordae", "Coi Leray", "Central Cee"
             "Eminem", "Lil Wayne", "Kid Cudi", "Big Sean", "Wiz Khalifa",
             "Mac Miller", "Logic", "Chance the Rapper", "Childish Gambino",
             "ScHoolboy Q", "Denzel Curry", "JID", "Smino", "EarthGang",
             "Isaiah Rashad", "Ski Mask The Slump God", "Trippie Redd",
             "NLE Choppa", "Lil Tjay", "Fivio Foreign", "Kodak Black",
-            "NBA YoungBoy", "Moneybagg Yo", "EST Gee", "42 Dugg"
+            "NBA YoungBoy", "Moneybagg Yo", "EST Gee", "42 Dugg"*/
         ];
 
         const rockArtists = [
@@ -56,13 +59,18 @@ async function fetchAlbums(){
             "Nirvana", "Green Day", "Linkin Park", "Paramore", "My Chemical Romance",
             "The Killers", "Muse", "Kings of Leon", "Weezer", 
             "The Strokes", "The Smashing Pumpkins", "The White Stripes",
-            "Queens of the Stone Age", "Florence + The Machine"*/
+            "Queens of the Stone Age", "Florence + The Machine"
             "Coldplay", "U2", "Metallica", "AC/DC", "Guns N' Roses",
             "Pearl Jam", "Soundgarden", "Alice In Chains", "Stone Temple Pilots",
             "Blink-182", "Sum 41", "The Offspring", "Good Charlotte",
             "Bring Me The Horizon", "Sleeping With Sirens", "Pierce The Veil",
             "Mayday Parade", "All Time Low", "Neck Deep", "The Maine",
             "YUNGBLUD", "Måneskin", "Greta Van Fleet", "Inhaler", "The Snuts"
+            "The Beatles", "Led Zeppelin", "AC/DC", "Aerosmith", "Def Leppard", "Queen",
+            "The Police", "Bon Jovi", "Iron Maiden", "Fleetwood Mac", "David Bowie",
+            "Pink Floyd", "The Rolling Stones", "Eagles", "The Who", "Black Sabbath",
+            "Lynyrd Skynyrd", "Billy Idol"*/
+
         ];
 
         const countryArtists = [
@@ -76,13 +84,13 @@ async function fetchAlbums(){
             /*"Bad Bunny", "J Balvin", "Peso Pluma", "Karol G", "Rosalía",
             "Daddy Yankee", "Maluma", "Ozuna", "Rauw Alejandro", "Feid",
             "Anitta", "Becky G", "Myke Towers", "El Alfa", 
-            "Manuel Turizo", "Natti Natasha", "Young Miko", "Bizarrap"*/
+            "Manuel Turizo", "Natti Natasha", "Young Miko", "Bizarrap"
             "Shakira", "Enrique Iglesias", "Luis Fonsi", "Romeo Santos",
             "Nicky Jam", "Arcángel", "Anuel AA", "Farruko", "Sech",
             "Jhayco", "Lunay", "Mora", "Eladio Carrion", "Tainy",
             "Kali Uchis", "Sebastián Yatra", "Prince Royce", "Camilo",
             "Reik", "Grupo Frontera", "Natanael Cano", "Junior H",
-            "Eslabon Armado", "Yahritza Y Su Esencia", "Ivan Cornejo"
+            "Eslabon Armado", "Yahritza Y Su Esencia", "Ivan Cornejo"*/
         ];
 
         const kpopArtists = [
@@ -98,13 +106,15 @@ async function fetchAlbums(){
             "Cigarettes After Sex", "Mitski", "Phoebe Bridgers", "boygenius",
             "Beabadoobee", "Japanese Breakfast", "Soccer Mommy", 
             "Arctic Lake", "girl in red", "The Japanese House", 
-            "Snail Mail", "Rex Orange County"*/
+            "Snail Mail", "Rex Orange County"
             "Bon Iver", "Sufjan Stevens", "The National", "Fleet Foxes",
             "Father John Misty", "Alvvays", "DIIV", "Beach House",
             "Real Estate", "Wild Nothing", "Homeshake", "Gus Dapperton",
             "Still Woozy", "Omar Apollo", "Dayglow", "Wallows",
             "The Marias", "Remi Wolf", "Jellyfish Entertainment", "Men I Trust",
             "boy pablo", "Cuco", "mxmtoon", "Current Joys", "Peach Pit"
+            "Will Paquin"*/
+
         ];
 
         const electronicArtists = [
@@ -121,18 +131,19 @@ async function fetchAlbums(){
             "Bryson Tiller", "H.E.R.", "Jhené Aiko", "The Weeknd", "Miguel",
             "Amy Winehouse", "Daniel Caesar", "Victoria Monét", 
             "Khalid", "Snoh Aalegra", "Giveon", "Mahalia", 
-            "Chlöe", "6LACK", "SiR"*/
+            "Chlöe", "6LACK", "SiR"
              "Usher", "Chris Brown", "Kehlani", "Ella Mai", "Trey Songz",
             "Ty Dolla $ign", "PARTYNEXTDOOR", "Tinashe", "Kiana Ledé",
             "Lucky Daye", "Joyce Wrice", "Ari Lennox", "Jazmine Sullivan",
             "Jorja Smith", "Sabrina Claudio", "Raveena", "UMI"
+            "Prince", "The Tempatations", "Laufey", "Sade"*/
         ];
 
         const limit = 50;
         let allAlbums = [];
 
         //update which list to iterate through here
-        for (const artist of popArtists) {
+        for (const artist of rnbArtists) {
             const url = `https://api.spotify.com/v1/search?type=album&q=artist:${artist}&limit=${limit}`;
             try {
                 const res = await fetch(url, {
@@ -153,7 +164,7 @@ async function fetchAlbums(){
                 title: album.name,
                 artist: artistNames,
                 releaseDate: new Date(album.release_date),
-                genre: "Pop",
+                genre: "R&B/Soul",
                 coverArtUrl: album.images?.[0]?.url || "",
                 createdAt: new Date()
             };
