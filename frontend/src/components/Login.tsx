@@ -3,12 +3,13 @@ import { buildPath } from './Path';
 import { storeToken } from '../tokenStorage';
 import { jwtDecode } from 'jwt-decode';
 import { Button } from "./ui/Button"
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 type customJwtPayload = { id: string, email: string };
 
 
 function Login() {
+    const navigate = useNavigate();
     const [message, setMessage] = useState('');
     const [loginName, setLoginName] = React.useState('');
     const [loginPassword, setPassword] = React.useState('');
@@ -22,6 +23,12 @@ function Login() {
             var res = JSON.parse(await response.text());
 
             if (res.error) {
+                // Check if error is about unverified account
+                if (res.error.includes('verify your account')) {
+                    // Redirect to verify page with username
+                    navigate(`/verify?username=${encodeURIComponent(loginName)}`);
+                    return;
+                }
                 setMessage(res.error);
                 return;
             }

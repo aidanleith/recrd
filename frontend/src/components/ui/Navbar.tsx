@@ -228,6 +228,20 @@ export const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="sm:hidden">
           <div className="space-y-1 pb-3 pt-2 px-4">
+            <Link
+              to="/home"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
+                isActive('/home')
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <IconHome className="w-5 h-5" />
+                <span>Home</span>
+              </div>
+            </Link>
             <button
               onClick={() => {
                 handleRankingsClick({ preventDefault: () => {} } as React.MouseEvent);
@@ -244,20 +258,6 @@ export const Navbar = () => {
                 <span>Rankings</span>
               </div>
             </button>
-            <Link
-              to="/home"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`block border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
-                isActive('/home')
-                  ? 'border-(--primary) text-(--primary)'
-                  : 'border-transparent text-gray-500 hover:border-(--primary) hover:text-(--primary)'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <IconHome className="w-5 h-5" />
-                <span>Home</span>
-              </div>
-            </Link>
             <Link
               to="/search"
               onClick={() => setIsMobileMenuOpen(false)}

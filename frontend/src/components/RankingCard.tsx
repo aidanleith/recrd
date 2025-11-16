@@ -68,7 +68,7 @@ function RankingCard({ ranking, album }: RankingCardProps) {
 
 
       {/* Album info row - cover on left, title/artist on right */}
-      <div className="flex flex-row gap-3 sm:gap-4 items-start sm:items-center">
+      <div className="flex flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 overflow-hidden">
         {/* Album cover - Left */}
         <div className="flex-shrink-0 cursor-pointer" onClick={handleAlbumClick}>
           {album.coverArtUrl ? (
@@ -85,17 +85,17 @@ function RankingCard({ ranking, album }: RankingCardProps) {
         </div>
 
         {/* Album info - Right */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-start min-w-0 flex-1 justify-between gap-2 sm:gap-0">
-          <div className='flex items-start flex-col cursor-pointer min-w-0 flex-1' onClick={handleAlbumClick}>
-            <h3 className="text-white font-bold text-start text-base sm:text-xl truncate w-full hover:text-(--primary) transition-colors">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start min-w-0 flex-1 justify-between gap-2 sm:gap-0 overflow-hidden">
+          <div className='flex items-start flex-col cursor-pointer min-w-0 flex-1 overflow-hidden' onClick={handleAlbumClick}>
+            <h3 className="text-white font-bold text-start text-base sm:text-xl truncate w-full max-w-full hover:text-(--primary) transition-colors">
               {album.title}
             </h3>
-            <p className="text-gray-400 text-sm text-start sm:text-xl truncate mt-1 w-full">
+            <p className="text-gray-400 text-sm text-start sm:text-xl truncate mt-1 w-full max-w-full">
               {album.artist}
             </p>
           </div>
 
-          <div className='flex flex-col items-start sm:items-end gap-1'>
+          <div className='flex flex-col items-start text-start sm:text-end sm:items-end gap-1'>
             {/* Comment/Notes */}
             {ranking.notes && ranking.notes.trim() && (
               <div className="mt-0 sm:mt-2">
