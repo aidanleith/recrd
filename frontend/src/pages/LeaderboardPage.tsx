@@ -114,6 +114,7 @@ function LeaderboardPage() {
 
       <div className="flex gap-2 sm:gap-3 mb-4">
         <button
+          aria-label='Top Albums'
           type="button"
           onClick={() => setLeaderboardType('albums')}
           className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
@@ -125,6 +126,7 @@ function LeaderboardPage() {
           top albums
         </button>
         <button
+          aria-label='Top Users'
           type="button"
           onClick={() => setLeaderboardType('users')}
           className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${

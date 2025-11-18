@@ -76,6 +76,7 @@ function Login() {
                 <input type="password" id="loginPassword" placeholder="Password" className="w-full text-center h-12 font-semibold bg-[#1e1e1e] border border-(--primary) rounded-lg"
                     onChange={handleSetPassword} />
                 <Button 
+                    aria-label='Login'
                     variant="tertiary"
                     size="lg"
                     onClick={doLogin}

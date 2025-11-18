@@ -127,6 +127,7 @@ function Register() {
                     required
                 />
                 <Button 
+                    aria-label="Create Account"
                     variant="tertiary"
                     size="lg"
                     type="submit"
@@ -138,6 +139,7 @@ function Register() {
             <div className="flex w-full justify-between">
                 <h2 className="text-(--darktext) font-bold">already have an account?</h2>
                 <button 
+                    aria-label="Log in"
                     onClick={() => navigate('/login')}
                     className="text-(--primary) font-bold hover:underline"
                 >

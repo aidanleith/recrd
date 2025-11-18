@@ -132,6 +132,7 @@ export const Navbar = () => {
               </Link> */}
               <Link
                 to="/home" // 4. Changed href -> to
+                aria-label="Home"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   isActive('/home')
                     ? 'border-primary text-(--primary)' // 5. Fixed
@@ -142,6 +143,7 @@ export const Navbar = () => {
               </Link>
               <button
                 onClick={handleRankingsClick}
+                aria-label="Rankings"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname.includes('/rankings')
                     ? 'border-primary text-(--primary)' // 5. Fixed
@@ -152,6 +154,7 @@ export const Navbar = () => {
               </button>
               <Link
                 to="/search" // 4. Changed href -> to
+                aria-label="Search"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   isActive('/search')
                     ? 'border-primary text-(--primary)' // 5. Fixed
@@ -162,6 +165,7 @@ export const Navbar = () => {
               </Link>
               <Link
                 to="/leaderboard" // 4. Changed href -> to
+                aria-label="Leaderboard"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   isActive('/leaderboard')
                     ? 'border-primary text-(--primary)' // 5. Fixed
@@ -172,6 +176,7 @@ export const Navbar = () => {
               </Link>
               <button
                 onClick={handleProfileClick}
+                aria-label="Profile"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname.startsWith('/profile') && !pathname.includes('/rankings') && !pathname.includes('/followers') && !pathname.includes('/following')
                     ? 'border-primary text-(--primary)' // 5. Fixed
@@ -186,10 +191,12 @@ export const Navbar = () => {
           <div className="flex items-center">
             <button
               type="button"
+              aria-label={isMobileMenuOpen ? "Close main menu" : "Open main menu"}
+              aria-expanded={isMobileMenuOpen}
               className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-[#2a2a2a] hover:text-white transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">{isMobileMenuOpen ? "Close main menu" : "Open main menu"}</span>
               {isMobileMenuOpen ? (
                 <svg
                   className="h-6 w-6"
@@ -247,6 +254,7 @@ export const Navbar = () => {
                 handleRankingsClick({ preventDefault: () => {} } as React.MouseEvent);
                 setIsMobileMenuOpen(false);
               }}
+              aria-label="Rankings"
               className={`block w-full text-left border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
                 pathname.includes('/rankings')
                   ? 'border-(--primary) text-(--primary)'
@@ -291,6 +299,7 @@ export const Navbar = () => {
                 handleProfileClick(e);
                 setIsMobileMenuOpen(false);
               }}
+              aria-label="Profile"
               className={`block w-full text-left border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors ${
                 pathname.startsWith('/profile') && !pathname.includes('/rankings') && !pathname.includes('/followers') && !pathname.includes('/following')
                   ? 'border-(--primary) text-(--primary)'

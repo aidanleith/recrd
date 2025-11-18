@@ -186,6 +186,7 @@ function RankAlbumPage() {
       <div className="flex flex-row gap-4 sm:gap-6 items-center">
         {albumData.coverArtUrl ? (
           <img
+            loading='lazy'
             src={albumData.coverArtUrl}
             alt={`${albumTitle} cover`}
             className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover shadow-lg flex-shrink-0"
@@ -239,6 +240,7 @@ function RankAlbumPage() {
           <div className="flex flex-wrap gap-2 mt-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
               <Button
+                aria-label='Ranking Numbers 1-10'
                 key={num}
                 type="button"
                 onClick={() => setRankValue(num)}
@@ -277,6 +279,7 @@ function RankAlbumPage() {
         {/* Submit Button */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Button
+            aria-label='Submit'
             type="submit"
             disabled={isSubmitting}
             variant="tertiary"
@@ -286,6 +289,7 @@ function RankAlbumPage() {
             {isSubmitting ? 'Submitting...' : hasExistingRanking ? 'update ranking' : 'submit ranking'}
           </Button>
           <button
+            aria-label='Cancel'
             type="button"
             onClick={() => {
               navigate(`/album/${albumData.id}`);

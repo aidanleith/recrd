@@ -77,6 +77,7 @@ function ForgotPassword() {
                             autoComplete="email"
                         />
                         <Button
+                            aria-label='Send Reset Link'
                             variant="tertiary"
                             size="lg"
                             type="submit"

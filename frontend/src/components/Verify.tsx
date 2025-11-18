@@ -183,10 +183,11 @@ function Verify() {
                     minLength={6}
                     maxLength={6}
                 />
-                <Button variant="tertiary" size="lg" type="submit">Verify</Button>
+                <Button aria-label="Verify" variant="tertiary" size="lg" type="submit">Verify</Button>
             </form>
             <div className="flex flex-col gap-2">
                 <Button 
+                    aria-label="Resend Verification Email"
                     variant="secondary" 
                     size="md" 
                     type="button"

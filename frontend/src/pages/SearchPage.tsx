@@ -289,6 +289,7 @@ function SearchPage() {
     return (
       <div className="flex items-center justify-center gap-1 sm:gap-2 mt-6 flex-wrap">
         <button
+          aria-label='Previous'
           onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
           className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-[#1e1e1e] border border-(--primary) text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a2a2a] transition-colors"
@@ -299,6 +300,7 @@ function SearchPage() {
         {startPage > 1 && (
           <>
             <button
+              aria-label='...'
               onClick={() => setCurrentPage(1)}
               className="px-2 sm:px-3 py-2 text-sm sm:text-base rounded-lg bg-[#1e1e1e] border border-(--primary) text-white hover:bg-[#2a2a2a] transition-colors"
             >
@@ -310,6 +312,7 @@ function SearchPage() {
 
         {pages.map((page) => (
           <button
+            aria-label='Page Number'
             key={page}
             onClick={() => setCurrentPage(page)}
             className={`px-2 sm:px-3 py-2 text-sm sm:text-base rounded-lg border transition-colors ${
@@ -326,6 +329,7 @@ function SearchPage() {
           <>
             {endPage < totalPages - 1 && <span className="text-gray-500 text-sm sm:text-base">...</span>}
             <button
+              aria-label='Last Page'
               onClick={() => setCurrentPage(totalPages)}
               className="px-2 sm:px-3 py-2 text-sm sm:text-base rounded-lg bg-[#1e1e1e] border border-(--primary) text-white hover:bg-[#2a2a2a] transition-colors"
             >
@@ -335,6 +339,7 @@ function SearchPage() {
         )}
 
         <button
+          aria-label='Next'
           onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
           disabled={currentPage === totalPages}
           className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-[#1e1e1e] border border-(--primary) text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a2a2a] transition-colors"
@@ -392,6 +397,7 @@ function SearchPage() {
           {hasMoreAlbums && (
             <div className="flex justify-center mt-6">
               <button
+                aria-label='Load More'
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
                 className="px-6 py-3 rounded-lg bg-(--primary) text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
@@ -443,6 +449,7 @@ function SearchPage() {
 
       <div className="flex gap-2 sm:gap-3 mb-4">
         <button
+          aria-label='Search Albums'
           type="button"
           onClick={() => setSearchType('albums')}
           className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
@@ -454,6 +461,7 @@ function SearchPage() {
           albums
         </button>
         <button
+          aria-label='Search Users'
           type="button"
           onClick={() => setSearchType('users')}
           className={`px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
@@ -476,6 +484,7 @@ function SearchPage() {
             className="flex-1 h-10 sm:h-12 px-3 sm:px-4 text-sm sm:text-base rounded-lg bg-[#1e1e1e] border border-(--primary) text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-(--primary)"
           />
           <button
+            aria-label='Search Button'
             type="submit"
             disabled={isLoading}
             className="px-4 sm:px-6 h-10 sm:h-12 text-sm sm:text-base rounded-lg bg-(--primary) text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity whitespace-nowrap"
