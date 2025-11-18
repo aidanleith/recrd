@@ -6,3 +6,6 @@ node_modules
 
 #backup dependencies
 backup
+
+#unit tests HTML coverage report
+coverage/

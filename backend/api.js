@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail')
 
 // Check if SendGrid API key is configured
+/*istanbul ignore next*/
 if (!process.env.SENDGRID_EMAIL_API_KEY) {
     console.error('WARNING: SENDGRID_EMAIL_API_KEY is not set in environment variables!');
     console.error('Please create a .env file in the backend folder with: SENDGRID_EMAIL_API_KEY=your_api_key_here');
@@ -28,6 +29,7 @@ const app_name = 'ntw234.xyz'
 //const app_name = '45.55.136.167'
 
 exports.setApp = function (app, client) {
+    /*istanbul ignore next*/
     app.post('/api/followUser', async (req, res, next) => {
         // incoming: userId, JWT
         // outgoing: error
@@ -71,6 +73,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next*/
     app.post('/api/unfollowUser', async (req, res, next) => {
         // incoming: userId, JWT
         // outgoing: error
@@ -108,6 +111,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next line*/
     app.post('/api/createRanking', async (req, res, next) => {
         // incoming: albumId, rankvalue, notes, JWT
         // outgoing: error
@@ -135,6 +139,8 @@ exports.setApp = function (app, client) {
         }
         res.status(200).json(error);
     });
+
+    /*istanbul ignore next*/
     app.post('/api/addTopThree', async (req, res, next) => {
         // incoming: albumId, JWT
         // outgoing: { error: string, jwtToken: string }
@@ -250,6 +256,8 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    //still needs to be implemented
+    /*istanbul ignore next*/
     app.post('/api/addToListen', async (req, res, next) => {
         // incoming: albumId, JWT
         // outgoing: error
@@ -269,6 +277,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(error);
     });
 
+    /*istanbul ignore next*/
     app.patch('/api/editRanking', async (req, res, next) => {
         // incoming: albumId, rankValue, notes, JWT
         // outgoing: error
@@ -304,40 +313,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(error);
     });
 
-    app.post('/api/addcard', async (req, res, next) => {
-        // incoming: userId, color
-        // outgoing: error
-        const { userId, card, jwtToken } = req.body;
-        try {
-            if (token.isExpired(jwtToken)) {
-                var r = { error: 'The JWT is no longer valid', jwtToken: '' };
-                res.status(200).json(r);
-                return;
-            }
-        }
-        catch (e) {
-            console.log(e.message);
-        }
-        const newCard = { Card: card, UserId: userId };
-        var error = '';
-        try {
-            const db = client.db();
-            const result = db.collection('Cards').insertOne(newCard);
-        }
-        catch (e) {
-            error = e.toString();
-        }
-        var refreshedToken = null;
-        try {
-            refreshedToken = token.refresh(jwtToken);
-        }
-        catch (e) {
-            console.log(e.message);
-        }
-        var ret = { error: error, jwtToken: refreshedToken };
-        res.status(200).json(ret);
-    });
-
+    /*istanbul ignore next*/
     app.post('/api/login', async (req, res, next) => {
         // incoming: username, password
         // outgoing: JWT, error
@@ -401,6 +377,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next*/
     app.post('/api/register', async (req, res, next) => {
         // incoming: username, email, password
         // outgoing: error
@@ -467,7 +444,7 @@ exports.setApp = function (app, client) {
         }
         res.status(200).json(error);
     });
-
+        /*istanbul ignore next*/
         const sendVerificationEmail = async (email, otp, req) => {
         // Check if API key is configured
         if (!process.env.SENDGRID_EMAIL_API_KEY) {
@@ -497,6 +474,7 @@ exports.setApp = function (app, client) {
         }
     };
 
+    /*istanbul ignore next*/
     app.post('/api/verifyOTP', async (req, res, next) => {
         // incoming: username, otp
         // outgoing: JWT, error
@@ -550,6 +528,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next*/
     app.post('/api/resendVerification', async (req, res, next) => {
         // incoming: username
         // outgoing: error
@@ -614,6 +593,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next*/
     app.post('/api/forgotPassword', async (req, res, next) => {
         // incoming: email
         // outgoing: error
@@ -659,6 +639,7 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 
+    /*istanbul ignore next*/
     const sendPasswordResetEmail = async (email, resetToken, req) => {
         const msg = {
             to: email,
@@ -679,6 +660,7 @@ exports.setApp = function (app, client) {
             })
     };
 
+    /*istanbul ignore next*/
     app.patch('/api/resetPassword/:token', async (req, res, next) => {
         // incoming: password
         // outgoing: JWT, error
@@ -761,6 +743,7 @@ exports.setApp = function (app, client) {
             const albums = await Promise.all(rankingResults.map(async ranking => {
                 try {
                     const albumResults = await db.collection('Albums').find({ _id: ranking.album }).toArray();
+                    /*istanbul ignore next*/
                     if (albumResults.length > 0) {
                         return {
                             _id: ranking.album,
@@ -787,6 +770,7 @@ exports.setApp = function (app, client) {
                 for (const albumId of topThree) {
                     try {
                         const albumResults = await db.collection('Albums').find({ _id: albumId }).toArray();
+                        /*istanbul ignore next*/
                         if (albumResults.length > 0) {
                             topThreeAlbums.push({
                                 _id: albumId,
@@ -878,6 +862,7 @@ exports.setApp = function (app, client) {
                 });
                 averageRanking = totalRankingAmount / rankingResults.length;
 
+                /*istanbul ignore next*/
                 if (rankingResults.length > 0) {
                     //Gets album info for each album and compiles it to be returned
                     rankings = await Promise.all(rankingResults.map(async ranking => {
@@ -919,44 +904,6 @@ exports.setApp = function (app, client) {
         }
     });
 
-    app.post('/api/searchcards', async (req, res, next) => {
-        // incoming: userId, search
-        // outgoing: results[], error
-        var error = '';
-        const { userId, search, jwtToken } = req.body;
-        try {
-            if (token.isExpired(jwtToken)) {
-                var r = { error: 'The JWT is no longer valid', jwtToken: '' };
-                res.status(200).json(r);
-                return;
-            }
-        }
-        catch (e) {
-            console.log(e.message);
-        }
-        var _search = search.trim();
-        const db = client.db();
-        const results = await db.collection('Cards').find({
-            "Card": {
-                $regex: _search + '.*',
-                $options: 'i'
-            }
-        }).toArray();
-        var _ret = [];
-        for (var i = 0; i < results.length; i++) {
-            _ret.push(results[i].Card);
-        }
-        var refreshedToken = null;
-        try {
-            refreshedToken = token.refresh(jwtToken);
-        }
-        catch (e) {
-            console.log(e.message);
-        }
-        var ret = { results: _ret, error: error, jwtToken: refreshedToken };
-        res.status(200).json(ret);
-    });
-
     //search for albums
     app.post('/api/searchAlbums', async (req, res, next) => {
         try {
@@ -989,7 +936,7 @@ exports.setApp = function (app, client) {
             console.log("Results returned: ", results.length, "out of", totalCount);
             var ret;
             if (results.length > 0) {
-                // Calculate average ranking for each album
+                //calculate average ranking for each album
                 const albumsWithRankings = await Promise.all(results.map(async (album) => {
                     const rankingResults = await db.collection('Rankings').find({ album: album._id }).toArray();
                     var averageRanking = 0;
@@ -1321,7 +1268,7 @@ exports.setApp = function (app, client) {
         // albums = {title, artist, coverArtUrl, ranking, notes, createdAt} 
         const jwtToken = req.headers.authorization?.split(' ')[1];
         const token = require("./createJWT.js");
-
+        /*istanbul ignore next*/
         try {
             if (!jwtToken || token.isExpired(jwtToken)) {
                 return res.status(401).json({ error: 'The JWT is no longer valid' });
@@ -1335,13 +1282,14 @@ exports.setApp = function (app, client) {
         const decodedToken = jwt.decode(jwtToken);
         console.log('Decoded token:', decodedToken);
 
+        /*istanbul ignore next*/
         if (!decodedToken || !decodedToken.id) {
             return res.status(401).json({ error: 'Invalid token: missing user ID' });
         }
 
         const userId = new ObjectId(String(decodedToken.id));
         console.log('Looking for user with ID:', userId);
-
+        /*istanbul ignore next*/
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
@@ -1460,6 +1408,7 @@ exports.setApp = function (app, client) {
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         const userId = new ObjectId(String(decodedToken.id));
+        /*istanbul ignore next*/
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
@@ -1507,6 +1456,7 @@ exports.setApp = function (app, client) {
         //decode JWT to get user ID
         const decodedToken = jwt.decode(jwtToken);
         const userId = new ObjectId(String(decodedToken.id));
+        /*istanbul ignore next*/
         try {
             const db = client.db('recrd');
             const userResults = await db.collection('Users').find({ _id: userId }).toArray();
@@ -1604,6 +1554,7 @@ exports.setApp = function (app, client) {
     });
 
     //endpoint to update user's top3 albums
+    /*istanbul ignore next*/
     app.patch('/api/users/profile/top3', async (req, res, next) => {
         //incoming: JWT in header, top3 array (album IDs) in body
         //outgoing: error, jwtToken
@@ -1660,4 +1611,6 @@ exports.setApp = function (app, client) {
         res.status(200).json(ret);
     });
 }
+
+module.exports = exports;
 

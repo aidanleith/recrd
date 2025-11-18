@@ -7,7 +7,9 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "dev": "nodemon ./server.js"
   },
   "dependencies": {
@@ -23,6 +25,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
     "typescript": "^5.9.3"
   }
 }
