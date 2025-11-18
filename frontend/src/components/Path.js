@@ -8,10 +8,10 @@ export function buildPath(route) {
             // Use custom API base URL from environment variable
             return `${apiBase}/${route}`;
         } else {
-            // Default: Use same domain with HTTPS (assuming API is proxied through nginx)
-            // If your API is on port 5000, you may need: `https://${app_name}:5000`
-            // But typically with nginx, API is proxied to same domain
-            return `https://${app_name}/${route}`;
+            // Default: Use relative path (recommended for same-domain setup)
+            // This works when API is proxied through nginx on the same domain
+            // If API is on different port/domain, set VITE_API_BASE_URL env var
+            return `/${route}`;
         }
     } else {
         // Development: Use localhost
