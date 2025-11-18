@@ -73,6 +73,7 @@ function RankingCard({ ranking, album }: RankingCardProps) {
         <div className="flex-shrink-0 cursor-pointer" onClick={handleAlbumClick}>
           {album.coverArtUrl ? (
             <img
+              loading='lazy'
               src={album.coverArtUrl}
               alt={`${album.title} cover`}
               className="w-16 h-16 sm:w-24 sm:h-24 rounded-md object-cover shadow-lg"

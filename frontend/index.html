@@ -4,14 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <meta name="description" content="recrd - Discover, rank, and share your favorite albums. Connect with music lovers and explore rankings from the community." />
+    
+    <!-- DNS prefetch and preconnect for external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- Async font loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap"></noscript>
+    
     <title>recrd</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Script is automatically deferred in production build by Vite -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

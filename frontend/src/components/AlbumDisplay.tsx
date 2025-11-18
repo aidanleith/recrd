@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AlbumDisplayProps {
   album: {
@@ -50,6 +50,7 @@ function AlbumDisplay({ album, onClick }: AlbumDisplayProps) {
       <div className="flex-shrink-0">
         {album.coverArtUrl ? (
           <img
+            loading='lazy'
             src={album.coverArtUrl}
             alt={`${album.title} cover`}
           className="w-16 h-16 sm:w-24 sm:h-24 rounded-md object-cover shadow-lg"

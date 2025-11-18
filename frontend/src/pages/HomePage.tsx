@@ -129,6 +129,7 @@ const HomePage = () => {
           {hasMore && (
             <div className="flex justify-center mt-6">
               <Button
+                aria-label='Loading...'
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
                 variant="primary"
@@ -148,6 +149,7 @@ const HomePage = () => {
       {/* Temporary Debug Logout Button */}
       <div className="mt-8 pt-8 border-t border-[#2a2a2a]">
         <Button
+          aria-label='Log out'
           onClick={() => {
             localStorage.removeItem('user_data');
             localStorage.removeItem('token_data');

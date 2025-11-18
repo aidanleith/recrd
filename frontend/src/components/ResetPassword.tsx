@@ -102,7 +102,7 @@ function ResetPassword() {
                     className="w-full text-center h-12 font-semibold bg-[#1e1e1e] border border-(--primary) rounded-lg"
                     required
                 />
-                <Button variant="tertiary" size="lg" type="submit">Reset Password</Button>
+                <Button aria-label="Reset Password" variant="tertiary" size="lg" type="submit">Reset Password</Button>
             </form>
             {message && (
                 <span className={`text-center ${

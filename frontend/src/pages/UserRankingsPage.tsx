@@ -141,12 +141,6 @@ export default function UserRankingsPage() {
     );
   }
 
-  // Get current user's username to determine if viewing own profile
-  const userData = localStorage.getItem("user_data");
-  const currentUser = userData ? JSON.parse(userData) : null;
-  
-  // Determine display username
-  const displayUsername = profileUsername || (currentUser ? "you" : "");
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">

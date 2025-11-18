@@ -737,6 +737,7 @@ export default function ProfilePage() {
           <h2 className="text-xl sm:text-2xl font-bold text-white">favorite albums</h2>
           <div className="flex gap-2">
           <Button
+              aria-label="View All Rankings"
               onClick={() => navigate(urlUsername ? `/profile/${urlUsername}/rankings` : "/profile/rankings")}
             variant="primary"
             size="sm"
@@ -767,6 +768,7 @@ export default function ProfilePage() {
               >
                 {album && album.coverArtUrl ? (
                   <img
+                    loading='lazy'
                     src={album.coverArtUrl}
                 alt={album.title}
                 className="object-cover w-full h-full"

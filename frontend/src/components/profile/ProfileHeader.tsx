@@ -50,6 +50,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* 3. Conditionally render a button based on props */}
           {isCurrentUser ? (
             <Button
+              aria-label="Edit Profile"
               onClick={() => alert("Opening edit modal...")}
               variant="primary"
               size="sm"
@@ -58,6 +59,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </Button>
           ) : (
             <Button
+              aria-label="Unfollow / Follow"
               onClick={isFollowing ? onUnfollowClick : onFollowClick}
               variant={isFollowing ? "secondary" : "primary"}
               size="sm"

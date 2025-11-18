@@ -73,6 +73,7 @@ export const Top3Modal: React.FC<Top3ModalProps> = ({
           <h2 className="text-2xl font-bold text-white">Select an Album</h2>
           <button
             onClick={onClose}
+            aria-label="Close modal"
             className="text-gray-400 hover:text-white text-2xl"
           >
             ×
@@ -94,6 +95,7 @@ export const Top3Modal: React.FC<Top3ModalProps> = ({
                 >
                   {album.coverArtUrl ? (
                     <img
+                      loading='lazy'
                       src={album.coverArtUrl}
                       alt={`${album.title} cover`}
                       className="w-16 h-16 rounded-md object-cover"

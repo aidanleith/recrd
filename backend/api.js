@@ -645,7 +645,7 @@ exports.setApp = function (app, client) {
             to: email,
             from: 'recrd@hamsterrunner.com',
             subject: 'Reset Your RECRD Password',
-            text: `Your password reset link is: http://${app_name}/reset-password/${resetToken}`
+            text: `Your password reset link is: https://${app_name}/reset-password/${resetToken}`
                 + "\nYour link will expire in " + passwordExpirationTime / 60000 + " minutes.", // plain‑text body
         }
         sgMail

@@ -147,6 +147,7 @@ function AlbumPage() {
         <div className="flex justify-center sm:justify-start">
           {albumData.coverArtUrl ? (
             <img
+              loading='lazy'
               src={albumData.coverArtUrl}
               alt={`${albumTitle} cover`}
               className="w-48 h-48 sm:w-60 sm:h-60 rounded-lg object-cover shadow-2xl"
@@ -177,6 +178,7 @@ function AlbumPage() {
 
             <div className="flex justify-start">
               <Button
+                aria-label='Edit Ranking'
                 onClick={() => {
                   navigate(`/album/${albumData.id}/rank`);
                 }}

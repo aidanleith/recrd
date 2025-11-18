@@ -21,7 +21,7 @@ function LoggedInName()
     return(
         <div id="loggedInDiv">
             <span id="userName">Logged In As {getCurrentUserName()} </span><br />
-            <button type="button" id="logoutButton" className="buttons"
+            <button aria-label="Log out" type="button" id="logoutButton" className="buttons"
                 onClick={doLogout}> Log Out </button>
         </div>
     );
